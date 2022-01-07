@@ -1,0 +1,67 @@
+[
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/include -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++17 -o CMakeFiles/PM.dir/src/image.cpp.o -c /home/numendacil/Photon_Mapping/src/image.cpp",
+  "file": "/home/numendacil/Photon_Mapping/src/image.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/include -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++17 -o CMakeFiles/PM.dir/src/main.cpp.o -c /home/numendacil/Photon_Mapping/src/main.cpp",
+  "file": "/home/numendacil/Photon_Mapping/src/main.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/include -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++17 -o CMakeFiles/PM.dir/src/mesh.cpp.o -c /home/numendacil/Photon_Mapping/src/mesh.cpp",
+  "file": "/home/numendacil/Photon_Mapping/src/mesh.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/include -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++17 -o CMakeFiles/PM.dir/src/scene_parser.cpp.o -c /home/numendacil/Photon_Mapping/src/scene_parser.cpp",
+  "file": "/home/numendacil/Photon_Mapping/src/scene_parser.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/include -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++17 -o CMakeFiles/PM.dir/src/render.cpp.o -c /home/numendacil/Photon_Mapping/src/render.cpp",
+  "file": "/home/numendacil/Photon_Mapping/src/render.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/include -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++17 -o CMakeFiles/PM.dir/src/utils.cpp.o -c /home/numendacil/Photon_Mapping/src/utils.cpp",
+  "file": "/home/numendacil/Photon_Mapping/src/utils.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++11 -o deps/vecmath/CMakeFiles/vecmath.dir/src/Matrix2f.cpp.o -c /home/numendacil/Photon_Mapping/deps/vecmath/src/Matrix2f.cpp",
+  "file": "/home/numendacil/Photon_Mapping/deps/vecmath/src/Matrix2f.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++11 -o deps/vecmath/CMakeFiles/vecmath.dir/src/Matrix3f.cpp.o -c /home/numendacil/Photon_Mapping/deps/vecmath/src/Matrix3f.cpp",
+  "file": "/home/numendacil/Photon_Mapping/deps/vecmath/src/Matrix3f.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++11 -o deps/vecmath/CMakeFiles/vecmath.dir/src/Matrix4f.cpp.o -c /home/numendacil/Photon_Mapping/deps/vecmath/src/Matrix4f.cpp",
+  "file": "/home/numendacil/Photon_Mapping/deps/vecmath/src/Matrix4f.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++11 -o deps/vecmath/CMakeFiles/vecmath.dir/src/Quat4f.cpp.o -c /home/numendacil/Photon_Mapping/deps/vecmath/src/Quat4f.cpp",
+  "file": "/home/numendacil/Photon_Mapping/deps/vecmath/src/Quat4f.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++11 -o deps/vecmath/CMakeFiles/vecmath.dir/src/Vector2f.cpp.o -c /home/numendacil/Photon_Mapping/deps/vecmath/src/Vector2f.cpp",
+  "file": "/home/numendacil/Photon_Mapping/deps/vecmath/src/Vector2f.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++11 -o deps/vecmath/CMakeFiles/vecmath.dir/src/Vector3f.cpp.o -c /home/numendacil/Photon_Mapping/deps/vecmath/src/Vector3f.cpp",
+  "file": "/home/numendacil/Photon_Mapping/deps/vecmath/src/Vector3f.cpp"
+},
+{
+  "directory": "/home/numendacil/Photon_Mapping/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9 -I/home/numendacil/Photon_Mapping/deps/vecmath/include -g -std=gnu++11 -o deps/vecmath/CMakeFiles/vecmath.dir/src/Vector4f.cpp.o -c /home/numendacil/Photon_Mapping/deps/vecmath/src/Vector4f.cpp",
+  "file": "/home/numendacil/Photon_Mapping/deps/vecmath/src/Vector4f.cpp"
+}
+]
