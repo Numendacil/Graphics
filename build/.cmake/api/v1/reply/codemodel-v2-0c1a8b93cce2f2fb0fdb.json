@@ -13,7 +13,7 @@
 					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "2.8"
+						"string" : "3.0"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -74,14 +74,14 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "PM::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-PM-Debug-6c03ec5d22aed007c249.json",
+					"jsonFile" : "target-PM-Debug-2a08afc0fe83d81679a9.json",
 					"name" : "PM",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "vecmath::@69edff53962db05e8783",
-					"jsonFile" : "target-vecmath-Debug-733bad4eef60305aa00a.json",
+					"jsonFile" : "target-vecmath-Debug-65b189b2d329f26ef8ad.json",
 					"name" : "vecmath",
 					"projectIndex" : 1
 				}
@@ -91,8 +91,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/numendacil/Photon_Mapping/build",
-		"source" : "/home/numendacil/Photon_Mapping"
+		"build" : "/Users/yanruoyu/Documents/Graphics/build",
+		"source" : "/Users/yanruoyu/Documents/Graphics"
 	},
 	"version" : 
 	{

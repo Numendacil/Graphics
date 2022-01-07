@@ -43,7 +43,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g"
+					"fragment" : "-g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk"
 				},
 				{
 					"fragment" : "-std=gnu++11"
@@ -53,7 +53,7 @@
 			[
 				{
 					"backtrace" : 2,
-					"path" : "/home/numendacil/Photon_Mapping/deps/vecmath/include"
+					"path" : "/Users/yanruoyu/Documents/Graphics/deps/vecmath/include"
 				}
 			],
 			"language" : "CXX",

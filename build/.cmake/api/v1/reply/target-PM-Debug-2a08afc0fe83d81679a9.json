@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "/home/numendacil/Photon_Mapping/bin/PM"
+			"path" : "/Users/yanruoyu/Documents/Graphics/bin/PM"
 		}
 	],
 	"backtrace" : 1,
@@ -49,7 +49,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g"
+					"fragment" : "-g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk"
 				},
 				{
 					"fragment" : "-std=gnu++17"
@@ -59,11 +59,11 @@
 			[
 				{
 					"backtrace" : 3,
-					"path" : "/home/numendacil/Photon_Mapping/include"
+					"path" : "/Users/yanruoyu/Documents/Graphics/include"
 				},
 				{
 					"backtrace" : 2,
-					"path" : "/home/numendacil/Photon_Mapping/deps/vecmath/include"
+					"path" : "/Users/yanruoyu/Documents/Graphics/deps/vecmath/include"
 				}
 			],
 			"language" : "CXX",
@@ -103,7 +103,7 @@
 				"role" : "flags"
 			},
 			{
-				"fragment" : "-rdynamic",
+				"fragment" : "",
 				"role" : "flags"
 			},
 			{

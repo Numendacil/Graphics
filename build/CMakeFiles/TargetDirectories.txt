@@ -1,6 +1,6 @@
-/home/numendacil/Photon_Mapping/build/CMakeFiles/PM.dir
-/home/numendacil/Photon_Mapping/build/CMakeFiles/edit_cache.dir
-/home/numendacil/Photon_Mapping/build/CMakeFiles/rebuild_cache.dir
-/home/numendacil/Photon_Mapping/build/deps/vecmath/CMakeFiles/vecmath.dir
-/home/numendacil/Photon_Mapping/build/deps/vecmath/CMakeFiles/edit_cache.dir
-/home/numendacil/Photon_Mapping/build/deps/vecmath/CMakeFiles/rebuild_cache.dir
+/Users/yanruoyu/Documents/Graphics/build/CMakeFiles/rebuild_cache.dir
+/Users/yanruoyu/Documents/Graphics/build/CMakeFiles/edit_cache.dir
+/Users/yanruoyu/Documents/Graphics/build/CMakeFiles/PM.dir
+/Users/yanruoyu/Documents/Graphics/build/deps/vecmath/CMakeFiles/rebuild_cache.dir
+/Users/yanruoyu/Documents/Graphics/build/deps/vecmath/CMakeFiles/edit_cache.dir
+/Users/yanruoyu/Documents/Graphics/build/deps/vecmath/CMakeFiles/vecmath.dir
