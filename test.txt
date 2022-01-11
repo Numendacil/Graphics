@@ -1,12 +1,12 @@
 
 PerspectiveCamera {
-    center 0 1 5
+    center 0 0 5
     direction 0 0 -1
     up 0 1 0
     angle 80
     width 640
     height 480
-    gamma 2.6
+    gamma 3
 }
 
 Background {
@@ -14,15 +14,29 @@ Background {
 }
 
 Materials {
-    numMaterials 5
-    LambertMaterial { color 1 0.3 1 }
-    LambertMaterial { color 0 1 0}
+    numMaterials 6
+    PhongMaterial {
+        diffuseColor 1 0 0
+        specularColor 0.7 0.7 0.7
+        shininess 200
+    }
     TransparentMaterial { 
-        color 0.8 0.8 1
+        color 0.8 0.5 0.7
+        index 1.57
+    }
+    TransparentMaterial { 
+        color 0.1 0.9 0.1
         index 1.33
     }
-    MirrorMaterial { 
-        color 1 1 1 
+    TransparentMaterial { 
+        color 0 0.5 1
+        index 1.73
+    }
+    
+    PhongMaterial {
+        diffuseColor 0.1 0.5 0.8
+        specularColor 0.3 0.7 0.7
+        shininess 20
     }
     PhongMaterial {
         diffuseColor 0.8 0.8 0.8
@@ -33,27 +47,28 @@ Materials {
 
 Group {
     numObjects 10
-    MaterialIndex 2
-    Sphere {
-        center 0 -0.5 -1
-        radius 1.5
-    }
-    Sphere {
-        center -4 -1.25 0
-        radius 0.75
-    }
     MaterialIndex 0
     Sphere {
-        center 3.5 -1 0
-        radius 1
+        center 0 0 -3
+        radius 2
     }
     MaterialIndex 1
-    Sphere {
-        center -3.75 -0.75 -3.75
-        radius 1.25
+    Rectangle {
+        a -2 0 0
+        b 2 2 1
+    }
+    MaterialIndex 2
+    Rectangle {
+        a -2 -2 0
+        b 0 0 1
+    }
+    MaterialIndex 3
+    Rectangle {
+        a 0 -2 0
+        b 2 0 1
     }
 
-    MaterialIndex 4
+    MaterialIndex 5
     Plane {
     normal 0 1 0
         offset -2
@@ -62,11 +77,11 @@ Group {
     normal 0 -1 0
         offset -6
     }
+    MaterialIndex 4
     Plane {
         normal 0 0 -1
         offset -7
     }
-    MaterialIndex 3
     Plane {
         normal 0 0 1
         offset -5
@@ -85,7 +100,7 @@ Lights {
     numLights 1
     PointLight {
         position 0.0 5 0
-        power 10 10 10
+        power 15 15 15
     }
 }
 
