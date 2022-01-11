@@ -14,66 +14,43 @@ Background {
 }
 
 Materials {
-    numMaterials 8
-    LambertMaterial { color 1 1 1 }
-    PhongMaterial { 
-        diffuseColor 0.8 0.3 0.4 
-        specularColor 0.6 0.6 0.6
-        shininess 20 
-    }
-    MirrorMaterial { 
-        color 1 1 1 
-    }
+    numMaterials 5
+    LambertMaterial { color 1 0.3 1 }
+    LambertMaterial { color 0 1 0}
     TransparentMaterial { 
         color 0.8 0.8 1
         index 1.33
     }
-    
-    GenericMaterial {
-        Ka 1.0000 1.0000 1.0000
-        Kd 0.0000 1.0000 0.0000
-        Ks 0.5000 0.5000 0.5000
-        Ns 200
+    MirrorMaterial { 
+        color 1 1 1 
     }
-    LambertMaterial { color 1 0 0 }
-    LambertMaterial { color 0 0.5 1 }
-    LambertMaterial { 
-        color 1 1 1
-        texture a.tga
+    PhongMaterial {
+        diffuseColor 0.8 0.8 0.8
+        specularColor 1 1 1
+        shininess 20
     }
 }
 
 Group {
     numObjects 10
-    MaterialIndex 0
-    Transform {
-        Translate 1 -2 -2
-        YRotate 35
-        Scale 1.5 1.5 1.5
-        TriangleMesh {
-            obj_file model.obj
-        }
-    }
     MaterialIndex 2
     Sphere {
-        center 3.75 4.75 -3.75
-        radius 1.25
+        center 0 -0.5 -1
+        radius 1.5
+    }
+    Sphere {
+        center -4 -1.25 0
+        radius 0.75
+    }
+    MaterialIndex 0
+    Sphere {
+        center 3.5 -1 0
+        radius 1
     }
     MaterialIndex 1
     Sphere {
-        center -3.5 -0.5 -1
-        radius 1.5
-    } 
-    MaterialIndex 3
-    Transform {
-        Translate 0 2 0
-        Scale 0.7 0.7 0.7
-        XRotate -30
-        YRotate 45
-        Rectangle {
-            a -1 -1 -1
-            b 1 1 1
-        }
+        center -3.75 -0.75 -3.75
+        radius 1.25
     }
 
     MaterialIndex 4
@@ -81,32 +58,23 @@ Group {
     normal 0 1 0
         offset -2
     }
-    MaterialIndex 0
     Plane {
     normal 0 -1 0
         offset -6
     }
-    MaterialIndex 7
-    Plane {
-        normal 0 0 1
-        offset -5
-        e1 10 0 0
-        e2 0 8 0
-        origin -5 -2 -5
-    }
     Plane {
         normal 0 0 -1
         offset -7
-        e1 -10 0 0
-        e2 0 8 0
-        origin 5 -2 7
     }
-    MaterialIndex 6
+    MaterialIndex 3
+    Plane {
+        normal 0 0 1
+        offset -5
+    }
     Plane {
         normal 1 0 0
         offset -5
     }
-    MaterialIndex 5
     Plane {
         normal -1 0 0
         offset -5

@@ -95,7 +95,7 @@ public:
 		Vector3f d = Vector3f((x - this->width / 2.0f) / this->fx, (this->height / 2.0f - y) / this->fy, 1.0f).normalized() * this->FocalLength;
 		d = (d + this->center - origin).normalized() ;
 		Matrix3f rot(this->horizontal, -this->up, this->direction);
-		return Ray(origin, rot * d);
+		return Ray(origin, (rot * d).normalized());
 	}
 
 protected:
