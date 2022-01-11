@@ -56,9 +56,9 @@ public:
 	HitSurface SamplePoint(double &pdf, RandomGenerator &rng) const override
 	{
 		pdf = 1.0f / (4 * M_PI * this->radius * this->radius);
-		float phi = rng.GetUniformReal() * 2 * M_PI;
-		float theta = std::acos(2 * rng.GetUniformReal() - 1);
-		Vector3f normal(std::sin(theta) * std::cos(phi), std::sin(theta) * std::sin(phi), std::cos(theta));
+		float phi = 2 * M_PI * rng.GetUniformReal();
+		float z = 2 * rng.GetUniformReal() - 1;
+		Vector3f normal(std::sqrt(1 - z * z) * std::cos(phi), std::sqrt(1 - z * z) * std::sin(phi), z);
 		Vector3f pos = this->center + normal * this->radius;
 		return {pos, center};
 	}

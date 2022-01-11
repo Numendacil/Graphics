@@ -47,12 +47,17 @@ Vector3f Reflect(const Vector3f& v, const Vector3f& n)
 	return -v + 2 * Vector3f::dot(v, n) * n;
 }
 
-// Calculate Refraction
-/*
-static Vector3f Refract(const Vector3f& v, const Vector3f& n, float idx_in, float idx_out, bool& isTIR)
+Vector3f Refract(const Vector3f& v, const Vector3f& n, float ior1, float ior2)
 {
+	float mu = ior1 / ior2;
+	float co = Vector3f::dot(v, n);
+	assert(co >= 0);
 
-}*/
+	if (mu * mu * (1 - co * co) >= 1)
+		return Vector3f::ZERO;
+	else
+		return mu * (n * co - v) - std::sqrt(1 - mu * mu * (1 - co * co)) * n;
+}
 
 bool CheckValid(const Vector3f& v)
 {

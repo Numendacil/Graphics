@@ -34,9 +34,8 @@ int main(int argc, char *argv[])
 	
 	SceneParser sceneParser(inputFile.c_str());
 	Camera *camera = sceneParser.getCamera();
-	Group *group = sceneParser.getGroup();
 	Image image(camera->getWidth(), camera->getHeight());
-	PhotonMapping pm(100000, 100, 10, 0.5, 0.75);
+	PhotonMapping pm(200000, 150, 100, 16, 0.1, 0.75);
 	pm.Render(sceneParser, image);
 
 	image.SaveBMP(outputFile.c_str());

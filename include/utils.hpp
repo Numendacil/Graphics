@@ -65,8 +65,8 @@ Vector3f GetPerpendicular(const Vector3f& v);
 // Calculate Reflection
 Vector3f Reflect(const Vector3f& v, const Vector3f& n);
 
-// Calculate Refraction
-Vector3f Refract(const Vector3f& v, const Vector3f& n, float idx_in, float idx_out, bool& isTIR);
+// Calculate Refraction, n points from 2 to 1, v in 1 and dot(n, v)
+Vector3f Refract(const Vector3f& v, const Vector3f& n, float ior1, float ior2);
 
 bool CheckValid(const Vector3f& v);
 

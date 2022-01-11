@@ -31,7 +31,10 @@ public:
 	{
 		bool result = false;
 		for (Object3D *item : this->ObjList)
+		{
 			result |= item->intersect(r, h, tmin);
+		}
+
 		return result;
 	}
 

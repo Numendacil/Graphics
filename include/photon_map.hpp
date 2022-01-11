@@ -51,14 +51,14 @@ private:
 			return;
 		float dist = (target - this->Photons[node->idx].pos).squaredLength();
 		queue.emplace(dist, node->idx);
-		if (queue.size() > k)
+		if ((int)queue.size() > k)
 			queue.pop();
 		float diff = target[node->axis] - this->Photons[node->idx].pos[node->axis];
 		if (diff < 0)
 			SearchKNearestNode(node->left, target, k, queue);
 		else
 			SearchKNearestNode(node->right, target, k, queue);
-		if (queue.top().first > diff * diff || queue.size() < k)
+		if (queue.top().first > diff * diff || (int)queue.size() < k)
 		{
 			if (diff < 0)
 				SearchKNearestNode(node->right, target, k, queue);
@@ -118,7 +118,7 @@ public:
 		this->SearchKNearestNode(this->root, target, k, queue);
 		result.resize(queue.size());
 		float max_dist = queue.top().first;
-		for (int i = 0; i < queue.size(); i++)
+		for (size_t i = 0; i < queue.size(); i++)
 		{
 			result[i] = queue.top().second;
 			queue.pop();
@@ -163,7 +163,7 @@ public:
 		return this->kdtree.SearchKNN(target, k, result);
 	}
 
-	float QueryNIR(const Vector3f& target, float radius2, std::vector<int>& result)
+	int QueryNIR(const Vector3f& target, float radius2, std::vector<int>& result)
 	{
 		return this->kdtree.SearchNIR(target, radius2, result);
 	}

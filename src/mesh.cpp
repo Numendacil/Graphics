@@ -8,20 +8,41 @@
 
 #include "plane.hpp"
 
+Material* GenerateMaterial(const Vector3f& Ka, const Vector3f& Kd, const Vector3f& Ks, float Ns, float Ni, float d, int illum, bool hasTexture, const std::string& filename)
+{
+	if (illum == 0 && illum == 1)
+		return hasTexture? new Lambert(Kd, filename) : new Lambert(Kd);
+	else if (illum == 2)
+		return hasTexture? new Phong(Kd, Ks, Ns, filename) : new Phong(Kd, Ks, Ns);
+	else if (illum == 5)
+		return new Mirror(Ks);
+	else if (illum == 7)
+		return new Transparent(Ks, Ni);
+	else
+		return hasTexture? new Generic(Ka, Kd, Ks, Ns, Ni, d, filename) : new Generic(Ka, Kd, Ks, Ns, Ni, d);
+}
+
 bool Mesh::intersect(const Ray &r, Hit &h, float tmin) const
 {
 
 	// Optional: Change this brute force method into a faster one.
 	bool result = false;
-	for (int triId = 0; triId < (int)t.size(); ++triId)
+	Hit htmp;
+	if (!this->BoundingBox->intersect(r, htmp, tmin))
+		return false;
+	for (auto& triIdx : this->t)
 	{
-		TriangleIndex triIndex = t[triId];
-		Triangle triangle(v[triIndex[0]],
-						  v[triIndex[1]], v[triIndex[2]], n[triId], material);
-		Plane plane(n[triId], Vector3f::dot(n[triId], v[triIndex[0]]), material);
+		Triangle triangle(this->v[triIdx.vIdx[0]], this->v[triIdx.vIdx[1]], this->v[triIdx.vIdx[2]], triIdx.material);
+		Plane plane(triangle.GetGeonormal(), Vector3f::dot(this->v[triIdx.vIdx[0]], triangle.GetGeonormal()), triIdx.material);
 		Hit h_test = h;
 		if (plane.intersect(r, h_test, tmin))
+		{
+			if (triIdx.hasNormal)
+				triangle.SetNormal(this->n[triIdx.nIdx[0]], this->n[triIdx.nIdx[1]], this->n[triIdx.nIdx[2]]);
+			if (triIdx.hasTexture)
+				triangle.SetTexCoord(this->texcoord[triIdx.texIdx[0]], this->texcoord[triIdx.texIdx[1]], this->texcoord[triIdx.texIdx[2]]);
 			result |= triangle.intersect(r, h, tmin);
+		}
 	}
 	return result;
 }
@@ -32,8 +53,12 @@ HitSurface Mesh::SamplePoint(double &pdf, RandomGenerator &rng) const
 	pdf = 1.0f / size;
 	int idx = rng.GetUniformInt(0, size - 1);
 	double objpdf;
-	TriangleIndex triIndex = this->t[idx];
-	Triangle triangle(this->v[triIndex[0]], this->v[triIndex[1]], this->v[triIndex[2]], this->n[idx], this->material);
+	TriangleIndex triIdx = this->t[idx];
+	Triangle triangle(this->v[triIdx.vIdx[0]], this->v[triIdx.vIdx[1]], this->v[triIdx.vIdx[2]], triIdx.material);
+	if (triIdx.hasNormal)
+		triangle.SetNormal(this->n[triIdx.nIdx[0]], this->n[triIdx.nIdx[1]], this->n[triIdx.nIdx[2]]);
+	if (triIdx.hasTexture)
+		triangle.SetTexCoord(this->texcoord[triIdx.texIdx[0]], this->texcoord[triIdx.texIdx[1]], this->texcoord[triIdx.texIdx[2]]);
 	HitSurface s = triangle.SamplePoint(objpdf, rng);
 	pdf *= objpdf;
 	return s;
@@ -47,16 +72,24 @@ Mesh::Mesh(const char *filename, Material *material) : Object3D(material)
 	f.open(filename);
 	if (!f.is_open())
 	{
-		std::cout << "Cannot open " << filename << "\n";
+		logging::ERROR("Cannot open " + std::string(filename));
 		return;
 	}
+
 	std::string line;
-	std::string vTok("v");
-	std::string fTok("f");
-	std::string texTok("vt");
-	char bslash = '/', space = ' ';
+	const std::string vTok("v");
+	const std::string fTok("f");
+	const std::string texTok("vt");
+	const std::string nTok("vn");
+	const std::string mtlTok("mtllib");
+	const std::string useTok("usemtl");
+	const char bslash = '/', space = ' ';
 	std::string tok;
-	int texID;
+	Vector3f max(-INFINITY, -INFINITY, -INFINITY);
+	Vector3f min(INFINITY, INFINITY, INFINITY);
+
+	Material* curMaterial = this->material;
+	logging::INFO("Begin loading " + std::string(filename)); 
 	while (true)
 	{
 		std::getline(f, line);
@@ -74,58 +107,168 @@ Mesh::Mesh(const char *filename, Material *material) : Object3D(material)
 		}
 		std::stringstream ss(line);
 		ss >> tok;
-		if (tok == vTok)
+		if (tok == mtlTok)
+		{
+			std::string mtlfilename;
+			ss >> mtlfilename;
+			parseMtl(mtlfilename);
+		}
+		else if (tok == useTok)
+		{
+			std::string name;
+			ss >> name;
+			if (this->MeshMaterial.count(name))
+				curMaterial = this->MeshMaterial[name];
+			else
+				curMaterial = this->material;
+		}
+		else if (tok == vTok)
 		{
 			Vector3f vec;
 			ss >> vec[0] >> vec[1] >> vec[2];
-			v.push_back(vec);
-		}
-		else if (tok == fTok)
-		{
-			if (line.find(bslash) != std::string::npos)
+			for (int i = 0; i < 3; i++)
 			{
-				std::replace(line.begin(), line.end(), bslash, space);
-				std::stringstream facess(line);
-				TriangleIndex trig;
-				facess >> tok;
-				for (int ii = 0; ii < 3; ii++)
-				{
-					facess >> trig[ii] >> texID;
-					trig[ii]--;
-				}
-				t.push_back(trig);
+				max[i] = std::max(max[i], vec[i]);
+				min[i] = std::min(min[i], vec[i]);
 			}
-			else
-			{
-				TriangleIndex trig;
-				for (int ii = 0; ii < 3; ii++)
-				{
-					ss >> trig[ii];
-					trig[ii]--;
-				}
-				t.push_back(trig);
-			}
+			this->v.push_back(vec);
 		}
 		else if (tok == texTok)
 		{
 			Vector2f texcoord;
 			ss >> texcoord[0];
 			ss >> texcoord[1];
+			this->texcoord.push_back(texcoord);
+		}
+		else if (tok == nTok)
+		{
+			Vector3f norm;
+			ss >> norm[0] >> norm[1] >> norm[2];
+			this->n.push_back(norm);
+		}
+		else if (tok == fTok)
+		{
+			std::string token[3];
+			TriangleIndex Idx;
+			ss >> token[0] >> token[1] >> token[2];
+			for (int i = 0; i < 3; i++)
+			{
+				std::istringstream iss(token[i]);
+				std::string item;
+				std::getline(iss, item, '/');	// Vertex
+				Idx.vIdx[i] = std::stoi(item) - 1;
+				if (std::getline(iss, item, '/'))	// Texture
+				{
+					if(!item.empty())
+					{
+						Idx.texIdx[i] = std::stoi(item) - 1;
+						Idx.hasTexture = true;
+					}
+				}
+				if (std::getline(iss, item, '/'))	// Normal
+				{
+					Idx.nIdx[i] = std::stoi(item) - 1;
+					Idx.hasNormal = true;
+				}
+
+			}
+			Idx.material = curMaterial;
+			this->t.push_back(Idx);
 		}
 	}
-	computeNormal();
-
+	this->BoundingBox = new Rectangle(max, min, this->material);
+	logging::INFO(std::string(filename) + " loading finished, " + std::to_string(this->v.size()) + " vertices "+ std::to_string(this->t.size()) + " triangles");
 	f.close();
 }
 
-void Mesh::computeNormal()
+void Mesh::parseMtl(const string& filename)
 {
-	n.resize(t.size());
-	for (int triId = 0; triId < (int)t.size(); ++triId)
+	std::ifstream f;
+	f.open(filename);
+	if (!f.is_open())
 	{
-		TriangleIndex &triIndex = t[triId];
-		Vector3f a = v[triIndex[1]] - v[triIndex[0]];
-		Vector3f b = v[triIndex[2]] - v[triIndex[0]];
-		n[triId] = Vector3f::cross(a, b).normalized();
+		logging::ERROR("Cannot open " + std::string(filename));
+		return;
 	}
+
+	std::string line, tok;
+
+	bool isReading = false;
+	std::string mtlName, texPath;
+	Vector3f Ka, Kd, Ks;
+	float Ns, Ni, d;
+	int illum;
+	bool hasTexture;
+	logging::INFO("Begin loading " + std::string(filename)); 
+	while(true)
+	{
+		std::getline(f, line);
+		if (f.eof())
+		{
+			if (isReading)
+				this->MeshMaterial[mtlName] = GenerateMaterial(Ka, Kd, Ks, Ns, Ni, d, illum, hasTexture, texPath);
+			break;
+		}
+		if (line.empty())
+		{
+			if (isReading)
+				this->MeshMaterial[mtlName] = GenerateMaterial(Ka, Kd, Ks, Ns, Ni, d, illum, hasTexture, texPath);
+			isReading = false;
+			continue;
+		}
+		if (line.at(0) == '#')
+		{
+			continue;
+		}
+
+		std::stringstream ss(line);
+		ss >> tok;
+		if (tok == "newmtl")
+		{
+			isReading = true;
+			Ka = Vector3f(1, 1, 1);
+			Kd = Vector3f(1, 1, 1);
+			Ks = Vector3f(1, 1, 1);
+			Ns = 0.0f;
+			Ni = 1.0f;
+			d = 1.0f;
+			illum = -1;
+			hasTexture = false;
+			ss >> mtlName;
+		}
+		else if (tok == "Ka")
+		{
+			ss >> Ka[0] >> Ka[1] >> Ka[2];
+		}
+		else if (tok == "Kd")
+		{
+			ss >> Kd[0] >> Kd[1] >> Kd[2];
+		}
+		else if (tok == "Ks")
+		{
+			ss >> Ks[0] >> Ks[1] >> Ks[2];
+		}
+		else if (tok == "Ns")
+		{
+			ss >> Ns;
+		}
+		else if (tok == "Ni")
+		{
+			ss >> Ni;
+		}
+		else if (tok == "d")
+		{
+			ss >> d;
+		}
+		else if (tok == "illum")
+		{
+			ss >> illum;
+		}
+		else if (tok.substr(0, 3) == "map")
+		{
+			ss >> texPath;
+			hasTexture = true;
+		}
+	}
+	logging::INFO(std::string(filename) + " loading finished, " + std::to_string(this->MeshMaterial.size()) + " materials");
 }

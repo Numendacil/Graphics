@@ -11,7 +11,7 @@ public:
 
 	virtual ~Light() = default;
 
-	virtual Ray SampleRay(Vector3f &color, double& pdf, RandomGenerator& rng) const = 0;
+	virtual Ray SampleRay(Vector3f &power, double& pdf, RandomGenerator& rng) const = 0;
 
 	virtual Vector3f GetIllumin(const Vector3f &dir) const = 0;
 
@@ -27,29 +27,29 @@ public:
 	AreaLight(Object3D *object, const Vector3f &c)
 	{
 		this->object = object;
-		color = c;
+		power = c;
 	}
 
-	~AreaLight() override = default;
+	~AreaLight() override {delete this->object;}
 
-	Ray SampleRay(Vector3f &color, double& pdf, RandomGenerator& rng) const override
+	Ray SampleRay(Vector3f &power, double& pdf, RandomGenerator& rng) const override
 	{
-		color = this->color;
+		power = this->power;
 		HitSurface surface = this->object->SamplePoint(pdf, rng);
 		Vector3f tangent = GetPerpendicular(surface.normal);
 		Vector3f binormal = Vector3f::cross(surface.normal, tangent).normalized();
 
-		double phi = rng.GetUniformReal(0, 2 * M_PI);
-		double theta = std::acos(rng.GetUniformReal());
-		pdf *= std::cos(theta) / M_PI;
-		color *= std::cos(theta);
-		Vector3f out = Vector3f(std::sin(theta) * std::cos(phi), std::sin(theta) * std::sin(phi), std::cos(theta));
+		double phi = 2 * M_PI * rng.GetUniformReal();
+		double t = std::sqrt(rng.GetUniformReal());
+		pdf *= t / M_PI;
+		power *= t;
+		Vector3f out = Vector3f(std::sqrt(1 - t * t) * std::cos(phi), std::sqrt(1 - t * t) * std::sin(phi), t);
 		return {surface.position, RelToAbs(tangent, binormal, surface.normal, out)};
 	}
 
 	Vector3f GetIllumin(const Vector3f &dir) const override
 	{
-		return this->color;
+		return this->power;
 	}
 
 	bool intersect(const Ray &r, Hit &h, float tmin) const override
@@ -59,7 +59,7 @@ public:
 
 private:
 	Object3D* object;
-	Vector3f color;
+	Vector3f power;
 };
 
 class PointLight : public Light
@@ -70,18 +70,18 @@ public:
 	PointLight(const Vector3f &p, const Vector3f &c)
 	{
 		this->position = p;
-		this->color = c;
+		this->power = c;
 	}
 
 	~PointLight() override = default;
 
-	Ray SampleRay(Vector3f &color, double& pdf, RandomGenerator& rng) const override
+	Ray SampleRay(Vector3f &power, double& pdf, RandomGenerator& rng) const override
 	{
-		color = this->color;
+		power = this->power;
 		pdf = 1.0f / (4 * M_PI);
-		float phi = rng.GetUniformReal() * 2 * M_PI;
-		float theta = std::acos(2 * rng.GetUniformReal() - 1);
-		Vector3f dir(std::sin(theta) * std::cos(phi), std::sin(theta) * std::sin(phi), std::cos(theta));
+		float phi = 2 * M_PI * rng.GetUniformReal();
+		float z = 2 * rng.GetUniformReal() - 1;
+		Vector3f dir(std::sqrt(1 - z * z) * std::cos(phi), std::sqrt(1 - z * z) * std::sin(phi), z);
 		return {this->position, dir};
 	}
 
@@ -92,12 +92,12 @@ public:
 
 	Vector3f GetIllumin(const Vector3f &dir) const override
 	{
-		return this->color;
+		return this->power;
 	}
 
 private:
 	Vector3f position;
-	Vector3f color;
+	Vector3f power;
 };
 
 #endif // LIGHT_H

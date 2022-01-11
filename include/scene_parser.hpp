@@ -13,6 +13,7 @@
 #include "sphere.hpp"
 #include "transform.hpp"
 #include "triangle.hpp"
+#include "rectangle.hpp"
 #include "light.hpp"
 #include "mesh.hpp"
 
@@ -80,6 +81,7 @@ private:
 	void parseFile();
 
 	void parsePerspectiveCamera();
+	void parseLensCamera();
 
 	void parseBackground();
 
@@ -91,11 +93,14 @@ private:
 	Lambert *parseLambertMaterial();
 	Phong *parsePhongMaterial();
 	Mirror *parseMirrorMaterial();
+	Transparent *parseTransparentMaterial();
+	Material *parseGenericMaterial();
 
 	Object3D *parseObject(char token[MAX_PARSER_TOKEN_LENGTH]);
 	Group *parseGroup();
 	Sphere *parseSphere();
 	Plane *parsePlane();
+	Rectangle * parseRectangle();
 	Triangle *parseTriangle();
 	Mesh *parseTriangleMesh();
 	Transform *parseTransform();

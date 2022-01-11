@@ -1,19 +1,12 @@
 
 PerspectiveCamera {
-    center 0 0 10
+    center 0 1 5
     direction 0 0 -1
     up 0 1 0
-    angle 30
-    width 200
-    height 200
-}
-
-Lights {
-    numLights 1
-    PointLight {
-        position 0.0 5 5
-        color 1 1 1 
-    }
+    angle 80
+    width 640
+    height 480
+    gamma 3.0
 }
 
 Background {
@@ -21,72 +14,110 @@ Background {
 }
 
 Materials {
-    numMaterials 4
-    PhongMaterial { diffuseColor 1 0 0 
-      specularColor 1 1 1
-      shininess 20
+    numMaterials 8
+    LambertMaterial { color 1 1 1 }
+    PhongMaterial { 
+        diffuseColor 0.8 0.3 0.4 
+        specularColor 0.6 0.6 0.6
+        shininess 20 
     }
-    LambertMaterial { color 0 1 0 }
-    LambertMaterial { color 0 0 1 }
-    PhongMaterial { diffuseColor 1 1 1 
-	specularColor 1 1 1
-	shininess 20}
+    MirrorMaterial { 
+        color 1 1 1 
+    }
+    TransparentMaterial { 
+        color 0.8 0.8 1
+        index 1.33
+    }
+    
+    GenericMaterial {
+        Ka 1.0000 1.0000 1.0000
+        Kd 0.0000 1.0000 0.0000
+        Ks 0.5000 0.5000 0.5000
+        Ns 200
+    }
+    LambertMaterial { color 1 0 0 }
+    LambertMaterial { color 0 0.5 1 }
+    LambertMaterial { 
+        color 1 1 1
+        texture a.tga
+    }
 }
 
 Group {
-    numObjects 11
+    numObjects 10
     MaterialIndex 0
-    Sphere {
-	center 0 0 0
-        radius 1 
-    }
-    MaterialIndex 1
-    Sphere {
-	center 1 1 1 
-        radius 0.75
-    }
-    Sphere {
-	center -1 -1 1 
-        radius 0.75
+    Transform {
+        Translate 1 -2 -2
+        YRotate 35
+        Scale 1.5 1.5 1.5
+        TriangleMesh {
+            obj_file model.obj
+        }
     }
     MaterialIndex 2
     Sphere {
-	center -1 1 -1 
-        radius 0.75
+        center 3.75 4.75 -3.75
+        radius 1.25
     }
+    MaterialIndex 1
     Sphere {
-	center 1 -1 -1 
-        radius 0.75 
-    }
+        center -3.5 -0.5 -1
+        radius 1.5
+    } 
     MaterialIndex 3
+    Transform {
+        Translate 0 2 0
+        Scale 0.7 0.7 0.7
+        XRotate -30
+        YRotate 45
+        Rectangle {
+            a -1 -1 -1
+            b 1 1 1
+        }
+    }
+
+    MaterialIndex 4
     Plane {
-	normal 0 1 0
+    normal 0 1 0
         offset -2
     }
-MaterialIndex 3
+    MaterialIndex 0
     Plane {
-	normal 0 -1 0
+    normal 0 -1 0
         offset -6
     }
-MaterialIndex 3
+    MaterialIndex 7
     Plane {
-	normal 1 0 0
-        offset -2
+        normal 0 0 1
+        offset -5
+        e1 10 0 0
+        e2 0 8 0
+        origin -5 -2 -5
     }
-MaterialIndex 3
     Plane {
-	normal -1 0 0
-        offset -2
+        normal 0 0 -1
+        offset -7
+        e1 -10 0 0
+        e2 0 8 0
+        origin 5 -2 7
     }
-MaterialIndex 3
+    MaterialIndex 6
     Plane {
-	normal 0 0 1
-        offset -2
+        normal 1 0 0
+        offset -5
     }
-MaterialIndex 3
+    MaterialIndex 5
     Plane {
-	normal 0 0 -1
-        offset -6
+        normal -1 0 0
+        offset -5
+    }
+}
+
+Lights {
+    numLights 1
+    PointLight {
+        position 0.0 5 0
+        power 10 10 10
     }
 }
 

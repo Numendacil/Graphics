@@ -1,6 +1,0 @@
-/Users/yanruoyu/Documents/Graphics/build/CMakeFiles/rebuild_cache.dir
-/Users/yanruoyu/Documents/Graphics/build/CMakeFiles/edit_cache.dir
-/Users/yanruoyu/Documents/Graphics/build/CMakeFiles/PM.dir
-/Users/yanruoyu/Documents/Graphics/build/deps/vecmath/CMakeFiles/rebuild_cache.dir
-/Users/yanruoyu/Documents/Graphics/build/deps/vecmath/CMakeFiles/edit_cache.dir
-/Users/yanruoyu/Documents/Graphics/build/deps/vecmath/CMakeFiles/vecmath.dir

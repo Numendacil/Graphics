@@ -28,7 +28,11 @@ public:
 		bool inter = o->intersect(tr, h, tmin);
 		if (inter)
 		{
-			h.set(h.getT(), h.getMaterial(), { r.GetAt(h.getT()), transformDirection(transform.transposed(), h.getSurface().normal).normalized()});
+			h.set(h.getT(), h.getMaterial(), HitSurface(r.GetAt(h.getT()),
+									 transformDirection(transform.transposed(), h.getSurface().normal).normalized(),
+									 transformDirection(transform.transposed(), h.getSurface().geonormal).normalized(),
+									 h.getSurface().texcoord,
+									 h.getSurface().HasTexture));
 		}
 		return inter;
 	}

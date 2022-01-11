@@ -4,6 +4,11 @@ PROJECT(PM CXX)
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release)
 ENDIF()
+# OpenMP
+FIND_PACKAGE(OpenMP)
+IF(NOT OpenMP_CXX_FOUND)
+    MESSAGE(WARNING "failed to find OpenMP")
+ENDIF()
 
 ADD_SUBDIRECTORY(deps/vecmath)
 
@@ -30,6 +35,7 @@ SET(PM_INCLUDES
         include/sphere.hpp
         include/transform.hpp
         include/triangle.hpp
+        include/rectangle.hpp
         include/utils.hpp
         include/photon_map.hpp
         include/render.hpp
@@ -37,7 +43,13 @@ SET(PM_INCLUDES
 
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+IF(MSVC)
+        ADD_COMPILE_OPTIONS(/W4 /WX)
+ELSE()
+        ADD_COMPILE_OPTIONS(-Wall -Wno-unused-variable)
+ENDIF()
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${PM_SOURCES} ${PM_INCLUDES})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} vecmath)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} OpenMP::OpenMP_CXX)
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PRIVATE include)

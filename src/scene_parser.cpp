@@ -92,6 +92,10 @@ void SceneParser::parseFile()
 		{
 			parsePerspectiveCamera();
 		}
+		else if (!strcmp(token, "LensCamera"))
+		{
+			parseLensCamera();
+		}
 		else if (!strcmp(token, "Background"))
 		{
 			parseBackground();
@@ -145,8 +149,50 @@ void SceneParser::parsePerspectiveCamera()
 	assert(!strcmp(token, "height"));
 	int height = readInt();
 	getToken(token);
+	assert(!strcmp(token, "gamma"));
+	int gamma = readFloat();
+	getToken(token);
 	assert(!strcmp(token, "}"));
-	camera = new PerspectiveCamera(center, direction, up, width, height, angle_radians);
+	camera = new PerspectiveCamera(center, direction, up, width, height, gamma, angle_radians);
+}
+
+void SceneParser::parseLensCamera()
+{
+	char token[MAX_PARSER_TOKEN_LENGTH];
+	// read in the camera parameters
+	getToken(token);
+	assert(!strcmp(token, "{"));
+	getToken(token);
+	assert(!strcmp(token, "center"));
+	Vector3f center = readVector3f();
+	getToken(token);
+	assert(!strcmp(token, "direction"));
+	Vector3f direction = readVector3f();
+	getToken(token);
+	assert(!strcmp(token, "up"));
+	Vector3f up = readVector3f();
+	getToken(token);
+	assert(!strcmp(token, "angle"));
+	float angle_degrees = readFloat();
+	float angle_radians = DegreesToRadians(angle_degrees);
+	getToken(token);
+	assert(!strcmp(token, "width"));
+	int width = readInt();
+	getToken(token);
+	assert(!strcmp(token, "height"));
+	int height = readInt();
+	getToken(token);
+	assert(!strcmp(token, "gamma"));
+	float gamma = readFloat();
+	getToken(token);
+	assert(!strcmp(token, "aperture"));
+	float aperture = readFloat();
+	getToken(token);
+	assert(!strcmp(token, "focal"));
+	float focal = readFloat();
+	getToken(token);
+	assert(!strcmp(token, "}"));
+	camera = new LensCamera(center, direction, up, width, height, gamma, angle_radians, aperture, focal);
 }
 
 void SceneParser::parseBackground()
@@ -216,14 +262,13 @@ Light *SceneParser::parseAreaLight()
 	char token[MAX_PARSER_TOKEN_LENGTH];
 	getToken(token);
 	assert(!strcmp(token, "{"));
+	Object3D* object = parseGroup();
 	getToken(token);
-	Object3D* object = parseObject(token);
-	getToken(token);
-	assert(!strcmp(token, "color"));
-	Vector3f color = readVector3f();
+	assert(!strcmp(token, "power"));
+	Vector3f power = readVector3f();
 	getToken(token);
 	assert(!strcmp(token, "}"));
-	return new AreaLight(object, color);
+	return new AreaLight(object, power);
 }
 
 Light *SceneParser::parsePointLight()
@@ -235,11 +280,11 @@ Light *SceneParser::parsePointLight()
 	assert(!strcmp(token, "position"));
 	Vector3f position = readVector3f();
 	getToken(token);
-	assert(!strcmp(token, "color"));
-	Vector3f color = readVector3f();
+	assert(!strcmp(token, "power"));
+	Vector3f power = readVector3f();
 	getToken(token);
 	assert(!strcmp(token, "}"));
-	return new PointLight(position, color);
+	return new PointLight(position, power);
 }
 // ====================================================================
 // ====================================================================
@@ -259,7 +304,11 @@ void SceneParser::parseMaterials()
 	while (num_materials > count)
 	{
 		getToken(token);
-		if (!strcmp(token, "PhongMaterial"))
+		if (!strcmp(token, "GenericMaterial"))
+		{
+			materials[count] = parseGenericMaterial();
+		}
+		else if (!strcmp(token, "PhongMaterial"))
 		{
 			materials[count] = parsePhongMaterial();
 		}
@@ -270,6 +319,10 @@ void SceneParser::parseMaterials()
 		else if (!strcmp(token, "MirrorMaterial"))
 		{
 			materials[count] = parseMirrorMaterial();
+		}
+		else if (!strcmp(token, "TransparentMaterial"))
+		{
+			materials[count] = parseTransparentMaterial();
 		}
 		else
 		{
@@ -282,9 +335,78 @@ void SceneParser::parseMaterials()
 	assert(!strcmp(token, "}"));
 }
 
+
+Material *SceneParser::parseGenericMaterial()
+{
+	char token[MAX_PARSER_TOKEN_LENGTH];
+	char filename[MAX_PARSER_TOKEN_LENGTH];
+	bool hasTexture = false;
+	Vector3f Ka(1, 1, 1), Kd(1, 1, 1), Ks(1, 1, 1);
+	float Ns = 0.0f, Ni = 1.0f, d = 1.0f;
+	int illum = -1; 
+	getToken(token);
+	assert(!strcmp(token, "{"));
+	while (true)
+	{
+		getToken(token);
+		if (strcmp(token, "Ka") == 0)
+		{
+			Ka = readVector3f();
+		}
+		else if (strcmp(token, "Kd") == 0)
+		{
+			Kd = readVector3f();
+		}
+		else if (strcmp(token, "Ks") == 0)
+		{
+			Ks = readVector3f();
+		}
+		else if (strcmp(token, "Ns") == 0)
+		{
+			Ns = readFloat();
+		}
+		else if (strcmp(token, "Ni") == 0)
+		{
+			Ni = readFloat();
+		}
+		else if (strcmp(token, "d") == 0)
+		{
+			d = readFloat();
+		}
+		else if (strcmp(token, "illum") == 0)
+		{
+			illum = readInt();
+		}
+		else if (strcmp(token, "texture") == 0 || strcmp(token, "map_Kd") == 0)
+		{
+			getToken(filename);
+			hasTexture = true;
+		}
+		else
+		{
+			assert(!strcmp(token, "}"));
+			break;
+		}
+	}
+	
+	if (illum == 0 && illum == 1)
+		return hasTexture? new Lambert(Kd, filename) : new Lambert(Kd);
+	else if (illum == 2)
+		return hasTexture? new Phong(Kd, Ks, Ns, filename) : new Phong(Kd, Ks, Ns);
+	else if (illum == 5)
+		return new Mirror(Ks);
+	else if (illum == 7)
+		return new Transparent(Ks, Ni);
+	else
+		return hasTexture? new Generic(Ka, Kd, Ks, Ns, Ni, d, filename) : new Generic(Ka, Kd, Ks, Ns, Ni, d);
+}
+
+
 Lambert *SceneParser::parseLambertMaterial()
 {
 	char token[MAX_PARSER_TOKEN_LENGTH];
+	char filename[MAX_PARSER_TOKEN_LENGTH];
+	bool hasTexture = false;
 	Vector3f color(1, 1, 1);
 	getToken(token);
 	assert(!strcmp(token, "{"));
@@ -295,22 +417,31 @@ Lambert *SceneParser::parseLambertMaterial()
 		{
 			color = readVector3f();
 		}
+		else if (strcmp(token, "texture") == 0)
+		{
+			getToken(filename);
+			hasTexture = true;
+		}
 		else
 		{
 			assert(!strcmp(token, "}"));
 			break;
 		}
 	}
-	auto *answer = new Lambert(color);
+	Lambert *answer;
+	if (hasTexture)
+		answer = new Lambert(color, filename);
+	else
+		answer = new Lambert(color);
 	return answer;
 }
 
 Phong *SceneParser::parsePhongMaterial()
 {
 	char token[MAX_PARSER_TOKEN_LENGTH];
+	char filename[MAX_PARSER_TOKEN_LENGTH];
+	bool hasTexture = false;
 	Vector3f diffuseColor(1, 1, 1), specularColor(0, 0, 0);
-	float diff = 0.7;
-	float spec = 0.3;
 	float shininess = 0;
 	getToken(token);
 	assert(!strcmp(token, "{"));
@@ -325,17 +456,14 @@ Phong *SceneParser::parsePhongMaterial()
 		{
 			specularColor = readVector3f();
 		}
-		else if (strcmp(token, "diff") == 0)
-		{
-			diff = readFloat();
-		}
-		else if (strcmp(token, "spec") == 0)
-		{
-			spec = readFloat();
-		}
 		else if (strcmp(token, "shininess") == 0)
 		{
 			shininess = readFloat();
+		}
+		else if (strcmp(token, "texture") == 0)
+		{
+			getToken(filename);
+			hasTexture = true;
 		}
 		else
 		{
@@ -343,7 +471,11 @@ Phong *SceneParser::parsePhongMaterial()
 			break;
 		}
 	}
-	auto *answer = new Phong(diffuseColor, specularColor, diff, spec, shininess);
+	Phong *answer;
+	if (hasTexture)
+		answer = new Phong(diffuseColor, specularColor, shininess, filename);
+	else
+		answer = new Phong(diffuseColor, specularColor, shininess);
 	return answer;
 }
 
@@ -370,6 +502,34 @@ Mirror *SceneParser::parseMirrorMaterial()
 	return answer;
 }
 
+Transparent *SceneParser::parseTransparentMaterial()
+{
+	char token[MAX_PARSER_TOKEN_LENGTH];
+	Vector3f color(1, 1, 1);
+	float ior = 1.0f;
+	getToken(token);
+	assert(!strcmp(token, "{"));
+	while (true)
+	{
+		getToken(token);
+		if (strcmp(token, "color") == 0)
+		{
+			color = readVector3f();
+		}
+		else if (strcmp(token, "index") == 0)
+		{
+			ior = readFloat();
+		}
+		else
+		{
+			assert(!strcmp(token, "}"));
+			break;
+		}
+	}
+	auto *answer = new Transparent(color, ior);
+	return answer;
+}
+
 // ====================================================================
 // ====================================================================
 
@@ -387,6 +547,10 @@ Object3D *SceneParser::parseObject(char token[MAX_PARSER_TOKEN_LENGTH])
 	else if (!strcmp(token, "Plane"))
 	{
 		answer = (Object3D *)parsePlane();
+	}
+	else if (!strcmp(token, "Rectangle"))
+	{
+		answer = (Object3D *)parseRectangle();
 	}
 	else if (!strcmp(token, "Triangle"))
 	{
@@ -483,6 +647,8 @@ Sphere *SceneParser::parseSphere()
 Plane *SceneParser::parsePlane()
 {
 	char token[MAX_PARSER_TOKEN_LENGTH];
+	bool hasTexture = false;
+	Vector3f e1, e2, origin;
 	getToken(token);
 	assert(!strcmp(token, "{"));
 	getToken(token);
@@ -492,9 +658,41 @@ Plane *SceneParser::parsePlane()
 	assert(!strcmp(token, "offset"));
 	float offset = readFloat();
 	getToken(token);
+	if (!strcmp(token, "e1"))
+	{
+		hasTexture = true;
+		e1 = readVector3f();
+		getToken(token);
+		assert(!strcmp(token, "e2"));
+		e2 = readVector3f();
+		getToken(token);
+		assert(!strcmp(token, "origin"));
+		origin = readVector3f();
+		getToken(token);
+	}
 	assert(!strcmp(token, "}"));
 	assert(current_material != nullptr);
-	return new Plane(normal, offset, current_material);
+	Plane* p = new Plane(normal, offset, current_material);
+	if (hasTexture)
+		p->SetTexCoord(e1, e2, origin);
+	return p;
+}
+
+Rectangle *SceneParser::parseRectangle()
+{
+	char token[MAX_PARSER_TOKEN_LENGTH];
+	getToken(token);
+	assert(!strcmp(token, "{"));
+	getToken(token);
+	assert(!strcmp(token, "a"));
+	Vector3f a = readVector3f();
+	getToken(token);
+	assert(!strcmp(token, "b"));
+	Vector3f b = readVector3f();
+	getToken(token);
+	assert(!strcmp(token, "}"));
+	assert(current_material != nullptr);
+	return new Rectangle(a, b, current_material);
 }
 
 Triangle *SceneParser::parseTriangle()
