@@ -212,6 +212,10 @@ void SceneParser::parseBackground()
 		{
 			background_color = readVector3f();
 		}
+		else if (!strcmp(token, "ambient"))
+		{
+			ambient_color = readVector3f();
+		}
 		else
 		{
 			printf("Unknown token in parseBackground: '%s'\n", token);

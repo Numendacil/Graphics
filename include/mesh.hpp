@@ -3,18 +3,164 @@
 
 #include <vector>
 #include <map>
+#include <numeric>
 #include "object3d.hpp"
 #include "triangle.hpp"
-#include "rectangle.hpp"
 #include "Vector2f.h"
 #include "Vector3f.h"
+
+class BBox : Object3D
+{
+public:
+	BBox() = delete;
+
+	BBox(const Vector3f &a, const Vector3f &b) : Object3D(nullptr)
+	{
+		this->UpperRightFront = a;
+		this->LowerLeftBehind = b;
+		for (int i = 0; i < 3; i++)
+			if (this->UpperRightFront[i] < this->LowerLeftBehind[i])
+				std::swap(this->UpperRightFront[i], this->LowerLeftBehind[i]);
+	}
+
+	bool intersect(const Ray &ray, Hit &hit, float tmin) const override
+	{
+		tmin = 0.0f;	// tmin should not work for bounding box
+
+		// Woo's algorithm
+		bool inside = true;
+		enum {LEFT, RIGHT, MIDDLE} pos[3];
+		Vector3f Candidate;
+		Vector3f origin = ray.getOrigin(), dir = ray.getDirection().normalized();
+		float length = ray.getDirection().length();
+		for (int i = 0; i < 3; i++)
+		{
+			if (origin[i] < this->LowerLeftBehind[i])
+			{
+				pos[i] = LEFT;
+				inside = false;
+				Candidate[i] = this->LowerLeftBehind[i];
+			}
+			else if (origin[i] > this->UpperRightFront[i])
+			{
+				pos[i] = RIGHT;
+				inside = false;
+				Candidate[i] = this->UpperRightFront[i];
+			}
+			else
+			{
+				pos[i] = MIDDLE;
+				Candidate[i] = (dir[i] > 0)? this->UpperRightFront[i] : this->LowerLeftBehind[i];
+			}
+		}
+
+		if (!inside)
+		{
+			float tmax = -1;
+			int maxIdx = 0;
+			for (int i = 0; i < 3; i++)
+			{
+				if (pos[i] != MIDDLE && std::abs(dir[i]) > 1e-5)
+				{
+					if (tmax < (Candidate[i] - origin[i]) / dir[i])
+					{
+						tmax = (Candidate[i] - origin[i]) / dir[i];
+						maxIdx = i;
+					}
+				}
+			}
+			if (tmax / length < tmin || tmax / length > hit.getT())
+				return false;
+			Vector3f position = ray.GetAt(tmax / length);
+			Vector3f normal;
+			for (int i = 0; i < 3; i++)
+			{
+				if (maxIdx != i)
+				{
+					if (position[i] < this->LowerLeftBehind[i] || position[i] > this->UpperRightFront[i])
+						return false;
+				}
+				else
+					normal[i] = (pos[i] == RIGHT)? -1 : 1;
+			}
+			hit.set(tmax / length, nullptr, {position, normal});
+			return true;
+		}
+		else
+		{
+			float tmax = -1;
+			int maxIdx = 0;
+			for (int i = 0; i < 3; i++)
+			{
+				if (std::abs(dir[i]) > 1e-5)
+				{
+					if (tmax < (Candidate[i] - origin[i]) / dir[i])
+					{
+						tmax = (Candidate[i] - origin[i]) / dir[i];
+						maxIdx = i;
+					}
+				}
+			}
+			if (tmax < tmin || tmax / length > hit.getT())
+				return false;
+			Vector3f position = ray.GetAt(tmax / length);
+			Vector3f normal;
+			normal[maxIdx] = (dir[maxIdx] < 0)? -1 : 1;
+			hit.set(tmax / length, nullptr, {position, normal});
+			return true;
+		}
+	}
+
+	HitSurface SamplePoint(double &pdf, RandomGenerator &rng) const override
+	{
+		pdf = -1.0f;
+		return HitSurface(Vector3f::ZERO, Vector3f::ZERO);
+	}
+
+	Vector3f GetCenter() const { return (this->UpperRightFront + this->LowerLeftBehind) / 2.0f; }
+
+	BBox* GetSubBox(int octant) const
+	{
+		Vector3f center = (this->UpperRightFront + this->LowerLeftBehind) / 2.0f;
+		assert(octant >=0 && octant < 8);
+		Vector3f corner;
+		for (int i = 0; i < 3; i++)
+			corner[i] = ((octant >> (2 - i)) & 0x1)? this->UpperRightFront[i] : this->LowerLeftBehind[i];
+		return new BBox(center, corner);
+	}
+
+	bool PointInBox(const Vector3f& v) const
+	{
+		for (int i = 0; i < 3; i++)
+			if(v[i] < this->LowerLeftBehind[i] - 1e-5 || v[i] > this->UpperRightFront[i] + 1e-5)
+				return false;
+		return true;
+	}
+
+	bool TriIntersectBox(const Vector3f& a, const Vector3f& b, const Vector3f& c) const
+	{
+		if (PointInBox(a))
+			return true;
+		if (PointInBox(b))
+			return true;
+		if (PointInBox(c))
+			return true;
+		return false;
+	}
+
+protected:
+	Vector3f UpperRightFront;
+	Vector3f LowerLeftBehind;
+};
+
+class Octree;
 
 class Mesh : public Object3D
 {
 
 public:
 	Mesh(const char *filename, Material *m);
-	~Mesh() {if (BoundingBox != nullptr) delete BoundingBox; for (auto& p : MeshMaterial) delete p.second;}
+	~Mesh();
 
 	struct TriangleIndex
 	{
@@ -35,8 +181,105 @@ private:
 	std::vector<TriangleIndex> t;
 	std::vector<Vector3f> n;
 	std::vector<Vector2f> texcoord;
-	Rectangle* BoundingBox;
 	std::map<std::string, Material*> MeshMaterial;
+
+	friend class Octree;
+	Octree* tree = nullptr;
+};
+
+class Octree
+{
+private:
+	struct OctNode
+	{
+		std::vector<size_t> index;
+		BBox *BoundingBox = nullptr;
+		bool isLeaf = false;
+		OctNode *ChildNode[8];
+
+		~OctNode()
+		{
+			delete this->BoundingBox;
+			if (!this->isLeaf)
+			{
+				for (int i = 0; i < 8; i++)
+					delete this->ChildNode[i];
+			}
+		}
+	};
+	const int MaxSize = 8;		// Max number of triangles in a box
+	const int MaxDepth = 8;		// Max depth of the tree
+
+	OctNode *root = nullptr;
+	Mesh *mesh = nullptr;
+
+	OctNode* Add(BBox* BoundingBox, const std::vector<size_t>& IdxList, int depth)
+	{
+		assert(BoundingBox != nullptr);
+		if (IdxList.empty())
+			return nullptr;
+
+		OctNode* node = new OctNode;
+		node->BoundingBox = BoundingBox;
+		if (IdxList.size() <= (size_t)this->MaxSize || depth >= this->MaxDepth)
+		{
+			node->isLeaf = true;
+			node->index = IdxList;
+			return node;
+		}
+
+		std::vector<size_t> list[8];
+		BBox* bbox[8];
+		for (int i = 0; i < 8; i++)
+		{
+			bbox[i] = BoundingBox->GetSubBox(i);
+		}
+
+		for (size_t idx : IdxList)
+		{
+			const Mesh::TriangleIndex triIdx = this->mesh->t[idx];
+			Vector3f vertices[3] = {this->mesh->v[triIdx.vIdx[0]], this->mesh->v[triIdx.vIdx[1]], this->mesh->v[triIdx.vIdx[2]]};
+			for (int i = 0; i < 8; i++)
+				if (bbox[i]->TriIntersectBox(vertices[0], vertices[1], vertices[2]))
+					list[i].push_back(idx);
+		}
+		
+		for (int i = 0; i < 8; i++)
+		{
+			node->ChildNode[i] = Add(bbox[i], list[i], depth + 1);
+		}
+
+		return node;
+	}
+
+public:
+	Octree() = delete;
+	Octree(Mesh* m) : root(nullptr), mesh(m) {}
+	~Octree () { delete this->root;}
+
+	void Build(BBox* BoundingBox)
+	{
+		std::vector<size_t> IdxArray(this->mesh->t.size());
+		std::iota(IdxArray.begin(), IdxArray.end(), 0);
+		this->root = Add(BoundingBox, IdxArray, 1);
+	}
+	bool Traverse(OctNode* node, const Ray &r, Hit &h, float tmin) const;
+
+	bool intersect(const Ray &r, Hit &h, float tmin) const
+	{
+		Hit htmp = h;
+		if (!this->root->BoundingBox->intersect(r, htmp, tmin))
+			return false;
+		Ray ray(htmp.getSurface().position, r.getDirection());
+		float t_delta = htmp.getT();
+		htmp.set(h.getT() - t_delta, nullptr, htmp.getSurface());
+
+		if (!Traverse(this->root, ray, htmp, tmin - t_delta))
+			return false;
+		h.set(t_delta + htmp.getT(), htmp.getMaterial(), htmp.getSurface());
+		return true;
+	}
+
 };
 
 #endif

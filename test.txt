@@ -1,91 +1,132 @@
 
-PerspectiveCamera {
-    center 0 0 5
+LensCamera {
+    center 0 -0.5 5
     direction 0 0 -1
     up 0 1 0
-    angle 80
-    width 640
-    height 480
-    gamma 3
+    angle 100
+    width 1280
+    height 720
+    gamma 2.2
+    aperture 0.2
+    focal 5.2
 }
 
 Background {
-    color 0 0.2 0.5
+    color 0 0 0
+    ambient 0 0 0
 }
 
 Materials {
-    numMaterials 6
-    PhongMaterial {
-        diffuseColor 1 0 0
-        specularColor 0.7 0.7 0.7
-        shininess 200
+    numMaterials 10
+    MirrorMaterial {
+        color 0.8 1 1
     }
-    TransparentMaterial { 
-        color 0.8 0.5 0.7
-        index 1.57
+    LambertMaterial {
+        color 0.5 0.5 0.5
     }
-    TransparentMaterial { 
-        color 0.1 0.9 0.1
-        index 1.33
+    LambertMaterial {
+        color 0.5 0.5 0.5
+        texture textures/pebble.tga
     }
-    TransparentMaterial { 
-        color 0 0.5 1
-        index 1.73
+
+    LambertMaterial {
+        color 0.5 1 0
     }
-    
-    PhongMaterial {
-        diffuseColor 0.1 0.5 0.8
-        specularColor 0.3 0.7 0.7
-        shininess 20
+    LambertMaterial {
+        color 0.5 0.5 0.75
     }
-    PhongMaterial {
-        diffuseColor 0.8 0.8 0.8
-        specularColor 1 1 1
-        shininess 20
+    LambertMaterial {
+        color 1 0.5 1
+    }
+    LambertMaterial {
+        color 0.25 0.5 0.5
+    }
+    LambertMaterial {
+        color 1 0.5 0.25
+    }
+    GenericMaterial {
+        Kd 0 0 0
+        Ks 1 1 1
+        Ni 1.5
+        d 0.05
+    }
+    GenericMaterial {
+        Kd 0.863 0.718 0.447
+        Ks 1 1 1
+        Ns 200
+        d 1
     }
 }
 
 Group {
-    numObjects 10
-    MaterialIndex 0
+    numObjects 19
+    MaterialIndex 4
     Sphere {
-        center 0 0 -3
-        radius 2
+        center 1 -1 0
+        radius 1
     }
-    MaterialIndex 1
-    Rectangle {
-        a -2 0 0
-        b 2 2 1
+    MaterialIndex 6
+    Sphere {
+        center -2 -1 -3
+        radius 1
     }
-    MaterialIndex 2
-    Rectangle {
-        a -2 -2 0
-        b 0 0 1
+    MaterialIndex 9
+    Sphere {
+        center 3 -1.3 3
+        radius 0.7
+    }
+    MaterialIndex 5
+    Sphere {
+        center 3 -1.7 -2
+        radius 0.3
     }
     MaterialIndex 3
-    Rectangle {
-        a 0 -2 0
-        b 2 0 1
+    Sphere {
+        center -0.5 -1.6 -3
+        radius 0.4
     }
-
+    MaterialIndex 3
+    Sphere {
+        center 4 -1.8 0
+        radius 0.2
+    }
+    MaterialIndex 7
+    Sphere {
+        center -4 -1.7 -1
+        radius 0.3
+    }
     MaterialIndex 5
-    Plane {
-    normal 0 1 0
-        offset -2
+    Sphere {
+        center -2.2 -1.6 -0.5
+        radius 0.4
     }
-    Plane {
-    normal 0 -1 0
-        offset -6
+    MaterialIndex 9
+    Sphere {
+        center -1 -1.7 0.7
+        radius 0.3
+    }
+    MaterialIndex 3
+    Sphere {
+        center 2 -1.7 1.5
+        radius 0.3
+    }
+    MaterialIndex 6
+    Sphere {
+        center -1 -1.8 3
+        radius 0.2
     }
     MaterialIndex 4
-    Plane {
-        normal 0 0 -1
-        offset -7
+    Sphere {
+        center 0 -1.7 2
+        radius 0.3
     }
-    Plane {
-        normal 0 0 1
-        offset -5
+    MaterialIndex 8
+    Sphere {
+        center -2.5 -1.5 2
+        radius 0.5
     }
+
+    MaterialIndex 0
     Plane {
         normal 1 0 0
         offset -5
@@ -94,13 +135,34 @@ Group {
         normal -1 0 0
         offset -5
     }
+    Plane {
+        normal 0 0 1
+        offset -5
+    }
+    MaterialIndex 1
+    Plane {
+        normal 0 0 -1
+        offset -6
+    }
+    Plane {
+        normal 0 -1 0
+        offset -6
+    }
+    MaterialIndex 2
+    Plane {
+        normal 0 1 0
+        offset -2
+        e1 5 0 0
+        e2 0 0 -5
+        origin 0 -2 0
+    }
 }
 
 Lights {
     numLights 1
     PointLight {
         position 0.0 5 0
-        power 15 15 15
+        power 25 25 25
     }
 }
 

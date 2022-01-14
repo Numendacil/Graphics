@@ -26,9 +26,9 @@ struct Node
 class KdTree
 {
 private:
-	Node* root;
-	int num;
 	Photon* Photons;
+	int num;
+	Node* root;
 
 	Node* KdNodeBuild(int* IdxArray, int n, int level)
 	{
@@ -100,8 +100,8 @@ private:
 	}
 
 public:
-	KdTree(){this->Photons = nullptr; this->num = 0; this->root = nullptr;}
-	KdTree(Photon* photons, int n){ this->Photons = photons; this->num = n; this->root = nullptr; }
+	KdTree() : Photons(nullptr), num(0), root(nullptr) {}
+	KdTree(Photon* photons, int n) : Photons(photons), num(n), root(nullptr) {}
 	~KdTree() { this->Clear(); }
 
 	void Set(Photon* photons, int n){ this->Photons = photons; this->num = n; this->root = nullptr; }
@@ -143,7 +143,7 @@ private:
 
 public:
 	PhotonMap(){}
-	PhotonMap(const std::vector<Photon>& photons) { this->Photons = photons; }
+	PhotonMap(const std::vector<Photon>& photons) : Photons(photons) {}
 
 	void Set(const std::vector<Photon>& photons) { this->Photons = photons; }
 	void push_back(const Photon& photon) { this->Photons.push_back(photon); }

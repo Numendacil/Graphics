@@ -27,9 +27,11 @@ public:
 	{
 		if (this->texture == nullptr)
 			return Vector3f::ZERO;
-		float x = texcoord[0] - std::floor(texcoord[0]);
-		float y = texcoord[1] - std::floor(texcoord[1]);
-		return this->texture->GetPixel(x * this->texture->Width(), y * this->texture->Height());
+		int x = (texcoord[0] - std::floor(texcoord[0])) * this->texture->Width();
+		x = (x >= this->texture->Width())? this->texture->Width() - 1 : x;
+		int y = (texcoord[1] - std::floor(texcoord[1])) * this->texture->Height();
+		y = (y >=  this->texture->Height())? this->texture->Height() - 1 : y;
+		return this->texture->GetPixel(x, y);
 	}
 	virtual Vector3f SampleOutDir(const Vector3f& in, Vector3f& out, const TransportMode mode, double& pdf, RefType& type, RandomGenerator& rng) const = 0;
 };
@@ -111,21 +113,24 @@ public:
 		else // Refract
 		{
 			type = RefType::SPECULAR;
-		//	float scale;	// Non-symmetry due to refraction energy in different medium
+			float scale = this->Ni * this->Ni;	// Non-symmetry due to refraction energy in different medium
 			if (in[2] >= 0) // Into the medium
 			{
 				out = Refract(in, Vector3f(0, 0, 1), 1.0f, this->Ni);
-				//		scale = 1.0f / (this->IoR * this->IoR);
+				scale = 1.0f / scale;
 			}
 			else
 			{
 				out = Refract(in, Vector3f(0, 0, -1), this->Ni, 1.0f);
-				//		scale = this->IoR * this->IoR;
 			}
 			pdf = 1.0f;
 			if (out == Vector3f::ZERO)
 				return Vector3f::ZERO;
-			return Vector3f(1, 1, 1) / (std::abs(out[2]) + 1e-5);
+			
+			if (mode == TransportMode::CAMERA)
+				return scale * Vector3f(1, 1, 1) / (std::abs(out[2]) + 1e-5);
+			else
+				return Vector3f(1, 1, 1) / (std::abs(out[2]) + 1e-5);
 		}
 	}
 
@@ -283,16 +288,15 @@ public:
 	{
 		Vector3f reflect = Reflect(in, Vector3f(0, 0, 1));
 		Vector3f refract;
-	//	float scale;	// Non-symmetry due to refraction energy in different medium 
+		float scale = this->IoR * this->IoR;	// Non-symmetry due to refraction energy in different medium 
 		if (in[2] >= 0)	// Into the medium
 		{
 			refract = Refract(in, Vector3f(0, 0, 1), 1.0f, this->IoR);
-	//		scale = 1.0f / (this->IoR * this->IoR);
+			scale = 1.0f / scale;
 		}
 		else
 		{
 			refract = Refract(in, Vector3f(0, 0, -1), this->IoR, 1.0f);
-	//		scale = this->IoR * this->IoR;
 		}
 		
 		type = RefType::SPECULAR;
@@ -310,7 +314,7 @@ public:
 			out = refract;
 			pdf = 1.0f;
 			if (mode == TransportMode::CAMERA)
-				return this->color / (co_t + 1e-5);
+				return scale * this->color / (co_t + 1e-5);
 			else
 				return this->color / (co_t + 1e-5);
 		}

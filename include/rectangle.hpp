@@ -14,7 +14,6 @@ class Rectangle : public Object3D
 public:
 	Rectangle() = delete;
 
-	// a b c are three vertex positions of the triangle
 	Rectangle(const Vector3f &a, const Vector3f &b, Material *m) : Object3D(m)
 	{
 		this->UpperRightFront = a;

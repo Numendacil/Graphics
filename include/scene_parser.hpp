@@ -37,6 +37,11 @@ public:
 		return background_color;
 	}
 
+	Vector3f getAmbient() const
+	{
+		return this->ambient_color;
+	}
+
 	int getNumLights() const
 	{
 		return num_lights;
@@ -115,6 +120,7 @@ private:
 	FILE *file;
 	Camera *camera;
 	Vector3f background_color;
+	Vector3f ambient_color;
 	int num_lights;
 	Light **lights;
 	int num_materials;

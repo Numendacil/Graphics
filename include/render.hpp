@@ -20,7 +20,7 @@ private:
 	float alpha;
 
 	void BuildPM(SceneParser& scene, std::vector<RandomGenerator>& rng);
-	Vector3f GetPhotonRadiance(const Vector3f& v, const Hit& hit, RandomGenerator& rng);
+	Vector3f GetPhotonRadiance(const Vector3f& v, const Hit& hit, SceneParser& scene, RandomGenerator& rng);
 	Vector3f GetRadiance(const Ray& r, SceneParser& scene, RandomGenerator& rng);
 public:
 	PhotonMapping(int n, int i, int d, int nrays, float r, float a) : nPhoton(n), iter(i), Depth(d), nRays(nrays), SearchRadius(r), alpha(a) {}

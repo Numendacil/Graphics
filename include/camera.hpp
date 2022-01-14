@@ -85,17 +85,18 @@ public:
 
 	Ray SampleRay(int x, int y, RandomGenerator& rng) const override
 	{
+		float delta_x = rng.GetUniformReal() - 0.5;
+		float delta_y = rng.GetUniformReal() - 0.5;
 		float u, v;
 		do
 		{
 			u = 2 * rng.GetUniformReal() - 1;
 			v = 2 * rng.GetUniformReal() - 1;
 		}while (u * u + v * v > 1);	// Simple reject sampling
-		Vector3f origin = this->center + u * (this->aperture / 2.0f) * this->up + v * (this->aperture / 2.0f) * this->horizontal;
-		Vector3f d = Vector3f((x - this->width / 2.0f) / this->fx, (this->height / 2.0f - y) / this->fy, 1.0f).normalized() * this->FocalLength;
-		d = (d + this->center - origin).normalized() ;
+		Vector3f r = u * (this->aperture / 2.0f) * this->up + v * (this->aperture / 2.0f) * this->horizontal;
 		Matrix3f rot(this->horizontal, -this->up, this->direction);
-		return Ray(origin, (rot * d).normalized());
+		Vector3f d = (rot * Vector3f((x + delta_x - this->width / 2.0f) / this->fx, (this->height / 2.0f - y - delta_y) / this->fy, 1.0f).normalized()) * this->FocalLength;
+		return Ray(this->center + r, (d - r).normalized());
 	}
 
 protected:

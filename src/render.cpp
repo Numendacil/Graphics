@@ -24,7 +24,7 @@ void PhotonMapping::BuildPM(SceneParser& scene, std::vector<RandomGenerator>& rn
 		Ray ray = light->SampleRay(power, pdf, rng);
 		if (pdf < 0) 
 			continue;
-		power =  power / pdf * nLights;
+		power =  power / std::max(pdf, 1e-5) * nLights;
 
 		for (int DepthCount = 0; DepthCount < this->Depth; DepthCount++)
 		{
@@ -69,7 +69,8 @@ void PhotonMapping::BuildPM(SceneParser& scene, std::vector<RandomGenerator>& rn
 			}
 			out = RelToAbs(tangent, binormal, surface.normal, out);
 			ray = Ray(surface.position, out);
-			power = power * co / pdf  * std::abs(Vector3f::dot(out, surface.geonormal)) * std::abs(Vector3f::dot(in, surface.normal)) / std::abs(Vector3f::dot(in, surface.geonormal));
+			power = power * co / std::max(pdf, 1e-5)  
+				* std::abs(Vector3f::dot(out, surface.geonormal)) * std::abs(Vector3f::dot(in, surface.normal)) / std::abs(Vector3f::dot(in, surface.geonormal));
 		}
 	}
 	logging::INFO("Number of Photons recorded: " + std::to_string(Photons.size()));
@@ -79,25 +80,28 @@ void PhotonMapping::BuildPM(SceneParser& scene, std::vector<RandomGenerator>& rn
 	this->GlobalPM.Build();
 }
 
-Vector3f PhotonMapping::GetPhotonRadiance(const Vector3f& v, const Hit& hit, RandomGenerator& rng)
+Vector3f PhotonMapping::GetPhotonRadiance(const Vector3f& v, const Hit& hit, SceneParser& scene, RandomGenerator& rng)
 {
 	std::vector<int> result;
 	const HitSurface& surface = hit.getSurface();
+	Material* material = hit.getMaterial();
 	int num = this->GlobalPM.QueryNIR(surface.position, this->SearchRadius * this->SearchRadius, result);
 	Vector3f tangent = GetPerpendicular(surface.normal);
 	Vector3f binormal = Vector3f::cross(surface.normal, tangent).normalized();
+	Vector3f in = AbsToRel(tangent, binormal, surface.normal, -v);
 
 	Vector3f color = Vector3f::ZERO;
 	for (auto& idx : result)
 	{
 		Photon ph = this->GlobalPM[idx];
-		color += ph.power * hit.getMaterial()->Shade(AbsToRel(tangent, binormal, surface.normal, -v),
-								AbsToRel(tangent, binormal, surface.normal, ph.dir),
-								TransportMode::CAMERA);
+		color += ph.power * material->Shade(in,
+							AbsToRel(tangent, binormal, surface.normal, ph.dir),
+							TransportMode::CAMERA);
 	};
 	if (surface.HasTexture && hit.getMaterial()->HasTexture())
 		color = color * hit.getMaterial()->GetTexture(surface.texcoord);
-	return color / (M_PI * this->SearchRadius * this->SearchRadius * this->nPhoton);
+	return color / (M_PI * this->SearchRadius * this->SearchRadius * this->nPhoton) 
+		+ scene.getAmbient() * material->Shade(in, Vector3f(0, 0, 1), TransportMode::CAMERA);
 }
 
 Vector3f PhotonMapping:: GetRadiance(const Ray& r, SceneParser& scene, RandomGenerator& rng)
@@ -125,12 +129,15 @@ Vector3f PhotonMapping:: GetRadiance(const Ray& r, SceneParser& scene, RandomGen
 		if (type == RefType::DIFFUSE)
 		{
 			if (isLight)
-				power = power * scene.getLight(LightIdx)->GetIllumin(dir);
-			return power * this->GetPhotonRadiance(dir, hit, rng);
+				return power * (this->GetPhotonRadiance(dir, hit, scene, rng) 
+					+ scene.getLight(LightIdx)->GetIllumin(dir) * std::abs(Vector3f::dot(dir, surface.normal)));
+			return power * this->GetPhotonRadiance(dir, hit, scene, rng);
 		}
-		out = RelToAbs(tangent, binormal, hit.getSurface().normal, out);
+		out = RelToAbs(tangent, binormal, surface.normal, out);
 		ray = Ray(surface.position, out);
-		power = power * co * std::abs(Vector3f::dot(out, surface.normal)) / pdf;
+		power = power * co * std::abs(Vector3f::dot(out, surface.normal)) / std::max(pdf, 1e-5);
+		if (power.length() < 1e-5)
+			break;
 	}
 	return power;
 }
@@ -170,12 +177,13 @@ void PhotonMapping::Render(SceneParser& scene, Image& image)
 				}
 				img[j + i * image.Height()] += col / this->nRays;
 				Vector3f col_tmp = img[j + i * image.Height()] / (iteration + 1);
+				float max_col = 1.0f;
 				for (int ii = 0; ii < 3; ii++)
 				{
-					col_tmp[ii] = (col_tmp[ii] > 1.0f) ? 1.0f : col_tmp[ii];
 					col_tmp[ii] = std::pow(col_tmp[ii], 1.0f / scene.getCamera()->getGamma());
+					max_col = std::max(max_col, col_tmp[ii]);
 				}
-				image_tmp.SetPixel(i, j, col_tmp);
+				image_tmp.SetPixel(i, j, col_tmp / max_col);
 				#pragma omp critical
 				{
 					count++;
@@ -193,12 +201,13 @@ void PhotonMapping::Render(SceneParser& scene, Image& image)
 		for (int j = 0; j < image.Height(); j++)
 		{
 			Vector3f col = img[j + i * image.Height()] / this->iter;
+			float max_col = 1.0f;
 			for (int ii = 0; ii < 3; ii++)
 			{
-				col[ii] = (col[ii] > 1.0f)? 1.0f: col[ii];
 				col[ii] = std::pow(col[ii], 1.0f / scene.getCamera()->getGamma());
+				max_col = std::max(max_col, col[ii]);
 			}
-			image.SetPixel(i, j, col);
+			image.SetPixel(i, j, col / max_col);
 		}
 	}
 }

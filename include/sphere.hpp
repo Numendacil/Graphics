@@ -60,7 +60,7 @@ public:
 		float z = 2 * rng.GetUniformReal() - 1;
 		Vector3f normal(std::sqrt(1 - z * z) * std::cos(phi), std::sqrt(1 - z * z) * std::sin(phi), z);
 		Vector3f pos = this->center + normal * this->radius;
-		return {pos, center};
+		return {pos, (pos - center).normalized()};
 	}
 
 protected:
