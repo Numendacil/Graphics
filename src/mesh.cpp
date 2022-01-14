@@ -24,6 +24,8 @@ Material* GenerateMaterial(const Vector3f& Ka, const Vector3f& Kd, const Vector3
 
 bool Octree::Traverse(Octree::OctNode* node, const Ray &r, Hit &h, float tmin) const
 {
+	if (node == nullptr)
+		return false;
 	if (node->isLeaf)
 	{
 		bool result = false;
