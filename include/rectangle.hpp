@@ -84,7 +84,7 @@ public:
 
 			if (this->material->HasTexture())
 			{
-				int face = maxIdx * 2 + (normal[maxIdx] > 0)? 0 : 1;
+				int face = maxIdx * 2 + ((normal[maxIdx] > 0)? 0 : 1);
 				hit.set(tmax / length, this->material, HitSurface(position, normal, normal, MapToUV(position, face), true));
 			}
 			else
@@ -113,7 +113,7 @@ public:
 			normal[minIdx] = (dir[minIdx] < 0)? -1 : 1;
 			if (this->material->HasTexture())
 			{
-				int face = minIdx * 2 + (normal[minIdx] > 0)? 0 : 1;
+				int face = minIdx * 2 + ((normal[minIdx] > 0)? 0 : 1);
 				hit.set(t / length, this->material, HitSurface(position, normal, normal, MapToUV(position, face), true));
 			}
 			else
