@@ -88,25 +88,7 @@ public:
 		}
 		else
 		{
-			float tmax = -1;
-			int maxIdx = 0;
-			for (int i = 0; i < 3; i++)
-			{
-				if (std::abs(dir[i]) > 1e-5)
-				{
-					if (tmax < (Candidate[i] - origin[i]) / dir[i])
-					{
-						tmax = (Candidate[i] - origin[i]) / dir[i];
-						maxIdx = i;
-					}
-				}
-			}
-			if (tmax < tmin || tmax / length > hit.getT())
-				return false;
-			Vector3f position = ray.GetAt(tmax / length);
-			Vector3f normal;
-			normal[maxIdx] = (dir[maxIdx] < 0)? -1 : 1;
-			hit.set(tmax / length, nullptr, {position, normal});
+			hit.set(0, nullptr, {Vector3f::ZERO, Vector3f::ZERO});
 			return true;
 		}
 	}
@@ -132,20 +114,22 @@ public:
 	bool PointInBox(const Vector3f& v) const
 	{
 		for (int i = 0; i < 3; i++)
-			if(v[i] < this->LowerLeftBehind[i] - 1e-5 || v[i] > this->UpperRightFront[i] + 1e-5)
+			if(v[i] < this->LowerLeftBehind[i] || v[i] > this->UpperRightFront[i])
 				return false;
 		return true;
 	}
 
 	bool TriIntersectBox(const Vector3f& a, const Vector3f& b, const Vector3f& c) const
 	{
-		if (PointInBox(a))
-			return true;
-		if (PointInBox(b))
-			return true;
-		if (PointInBox(c))
-			return true;
-		return false;
+		// An approximate intersection detection using AABB of the triangle
+		bool result = true;
+		for (int i = 0; i < 3; i++)
+		{
+			float MaxCoord = std::max(a[i], std::max(b[i], c[i])) + 1e-5;
+			float MinCoord = std::min(a[i], std::min(b[i], c[i])) - 1e-5;
+			result &= (MinCoord < this->UpperRightFront[i]) && (MaxCoord > this->LowerLeftBehind[i]);
+		}
+		return result;
 	}
 
 protected:
@@ -207,7 +191,7 @@ private:
 			}
 		}
 	};
-	const int MaxSize = 8;		// Max number of triangles in a box
+	const int MaxSize = 16;		// Max number of triangles in a box
 	const int MaxDepth = 8;		// Max depth of the tree
 
 	OctNode *root = nullptr;
@@ -217,7 +201,10 @@ private:
 	{
 		assert(BoundingBox != nullptr);
 		if (IdxList.empty())
+		{
+			delete BoundingBox;
 			return nullptr;
+		}
 
 		OctNode* node = new OctNode;
 		node->BoundingBox = BoundingBox;
@@ -237,18 +224,23 @@ private:
 
 		for (size_t idx : IdxList)
 		{
-			const Mesh::TriangleIndex triIdx = this->mesh->t[idx];
+			const Mesh::TriangleIndex& triIdx = this->mesh->t[idx];
 			Vector3f vertices[3] = {this->mesh->v[triIdx.vIdx[0]], this->mesh->v[triIdx.vIdx[1]], this->mesh->v[triIdx.vIdx[2]]};
+		//	bool flag = false;
 			for (int i = 0; i < 8; i++)
+			{
 				if (bbox[i]->TriIntersectBox(vertices[0], vertices[1], vertices[2]))
+				{
 					list[i].push_back(idx);
+				}
+			}
 		}
 		
 		for (int i = 0; i < 8; i++)
 		{
 			node->ChildNode[i] = Add(bbox[i], list[i], depth + 1);
 		}
-
+		node->isLeaf = false;
 		return node;
 	}
 
@@ -270,13 +262,9 @@ public:
 		Hit htmp = h;
 		if (!this->root->BoundingBox->intersect(r, htmp, tmin))
 			return false;
-		Ray ray(htmp.getSurface().position, r.getDirection());
-		float t_delta = htmp.getT();
-		htmp.set(h.getT() - t_delta, nullptr, htmp.getSurface());
 
-		if (!Traverse(this->root, ray, htmp, tmin - t_delta))
+		if (!Traverse(this->root, r, h, tmin))
 			return false;
-		h.set(t_delta + htmp.getT(), htmp.getMaterial(), htmp.getSurface());
 		return true;
 	}
 

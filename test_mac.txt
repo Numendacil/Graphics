@@ -1,0 +1,55 @@
+
+PerspectiveCamera {
+    center 0 2 5
+    direction 0 -0.5 -1
+    up 0 1 0
+    angle 100
+    width 1280
+    height 720
+    gamma 2.2
+}
+
+Background {
+    color 0 0 0
+    ambient 0.2 0.2 0.2
+}
+
+Materials {
+    numMaterials 2
+    LambertMaterial {
+        color 0.5 0.5 0.5
+        texture textures/pebble.tga
+    }
+    LambertMaterial {
+        color 0 1 1
+    }
+}
+
+Group {
+    numObjects 2
+    MaterialIndex 1
+    Transform {
+        YRotate 45
+        Scale 3 3 3
+        TriangleMesh {
+            obj_file model.obj
+        }
+    }
+    MaterialIndex 0
+    Plane {
+        normal 0 1 0
+        offset -2
+        e1 5 0 0
+        e2 0 0 -5
+        origin 0 -2 0
+    }
+}
+
+Lights {
+    numLights 1
+    PointLight {
+        position 0.0 5 0
+        power 100 100 100
+    }
+}
+

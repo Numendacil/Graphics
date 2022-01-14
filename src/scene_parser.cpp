@@ -393,7 +393,7 @@ Material *SceneParser::parseGenericMaterial()
 		}
 	}
 	
-	if (illum == 0 && illum == 1)
+	if (illum == 0 || illum == 1)
 		return hasTexture? new Lambert(Kd, filename) : new Lambert(Kd);
 	else if (illum == 2)
 		return hasTexture? new Phong(Kd, Ks, Ns, filename) : new Phong(Kd, Ks, Ns);

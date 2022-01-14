@@ -5,12 +5,13 @@
 #include <cstdlib>
 #include <utility>
 #include <sstream>
+#include <algorithm>
 
 #include "plane.hpp"
 
 Material* GenerateMaterial(const Vector3f& Ka, const Vector3f& Kd, const Vector3f& Ks, float Ns, float Ni, float d, int illum, bool hasTexture, const std::string& filename)
 {
-	if (illum == 0 && illum == 1)
+	if (illum == 0 || illum == 1)
 		return hasTexture? new Lambert(Kd, filename) : new Lambert(Kd);
 	else if (illum == 2)
 		return hasTexture? new Phong(Kd, Ks, Ns, filename) : new Phong(Kd, Ks, Ns);
@@ -38,61 +39,29 @@ bool Octree::Traverse(Octree::OctNode* node, const Ray &r, Hit &h, float tmin) c
 				triangle.SetNormal(m->n[triIdx.nIdx[0]], m->n[triIdx.nIdx[1]], m->n[triIdx.nIdx[2]]);
 			if (triIdx.hasTexture)
 				triangle.SetTexCoord(m->texcoord[triIdx.texIdx[0]], m->texcoord[triIdx.texIdx[1]], m->texcoord[triIdx.texIdx[2]]);
-			result |= triangle.intersect(r, h, 0);
+			result |= triangle.intersect(r, h, tmin);
 		}
 		return result;
 	}
 
-	Vector3f center = node->BoundingBox->GetCenter();
-	Vector3f origin = r.getOrigin();
-	Vector3f dir = r.getDirection();
-	Ray ray = r;
-	Hit hit = h;
-	float t_delta = 0.0f;
-	// Find which octant
-	int octant = 0;
-	bool side[3];
-	for (int i = 0; i < 3; i++)
+	std::vector<std::pair<float, int>> tList;
+	for (int octant = 0; octant < 8; octant++)
 	{
-		side[i] = (center[i] <= origin[i]);
-		octant |= (int)side[i] << (2 - i);
-	}
-
-	while (true)
-	{
-		if (Traverse(node->ChildNode[octant], ray, hit, tmin - t_delta))
-			break;
-
-		// Find next octant to intersect
-		float min_dist = INFINITY;
-		int minIdx = -1;
-		for (int i = 0; i < 3; i++)
+		Hit hit = h;
+		if (node->ChildNode[octant] != nullptr)
 		{
-			if (side[i] != (dir[i] < 0) || std::abs(dir[i]) < 1e-5)
-				continue;
-			float dist = (center - origin)[i] / dir[i];
-			if (min_dist > dist)
-			{
-				minIdx = i;
-				min_dist = dist;
-			}
+			if (node->ChildNode[octant]->BoundingBox->intersect(r, hit, tmin))
+				tList.push_back({hit.getT(), octant});
 		}
-
-		if (minIdx == -1 || min_dist > hit.getT()) // No intersection
-			return false;
-		Vector3f nextOrigin = origin + min_dist * dir;
-		if (!node->BoundingBox->PointInBox(nextOrigin)) // No intersection
-			return false;
-
-		side[minIdx] = !side[minIdx];
-		octant = (int)side[0] * 4 + (int)side[1] * 2 + (int)side[2];
-		ray = Ray(nextOrigin, dir);
-		hit.set(hit.getT() - min_dist, hit.getMaterial(), hit.getSurface());
-		t_delta += min_dist;
 	}
 
-	h.set(hit.getT() + t_delta, hit.getMaterial(), hit.getSurface());
-	return true;
+	std::sort(tList.begin(), tList.end());
+	for (auto& p : tList)
+	{
+		if(Traverse(node->ChildNode[p.second], r, h, tmin))
+			return true;
+	}
+	return false;
 }
 
 bool Mesh::intersect(const Ray &r, Hit &h, float tmin) const

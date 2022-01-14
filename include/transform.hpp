@@ -20,7 +20,7 @@ public:
 	{
 	}
 
-	virtual bool intersect(const Ray &r, Hit &h, float tmin) const
+	virtual bool intersect(const Ray &r, Hit &h, float tmin) const override
 	{
 		Vector3f trSource = transformPoint(transform, r.getOrigin());
 		Vector3f trDirection = transformDirection(transform, r.getDirection());
