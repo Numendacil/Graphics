@@ -146,7 +146,7 @@ public:
 		this->color = color; 
 		this->texture = nullptr;
 	}
-	Lambert(const Vector3f& color, const std::string& filename) 
+	Lambert(const Vector3f& color, const std::string& filename)
 	{
 		this->color = color; 
 		this->texture = Image::LoadTGA(filename.c_str());
@@ -250,6 +250,11 @@ public:
 		this->color = c;
 		this->texture = nullptr;
 	}
+	Mirror(const Vector3f& c, const std::string& filename)
+	{
+		this->color = c;
+		this->texture = Image::LoadTGA(filename.c_str());
+	}
 
 	Vector3f Shade(const Vector3f& in, const Vector3f& out, const TransportMode mode) const override
 	{
@@ -277,6 +282,13 @@ public:
 		this->color = c;
 		this->IoR = ior;
 		this->texture = nullptr;
+	}
+
+	Transparent(const Vector3f& c, float ior, const std::string& filename)
+	{
+		this->color = c;
+		this->IoR = ior;
+		this->texture = Image::LoadTGA(filename.c_str());
 	}
 
 	Vector3f Shade(const Vector3f& in, const Vector3f& out, const TransportMode mode) const override

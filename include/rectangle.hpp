@@ -33,13 +33,13 @@ public:
 		float length = ray.getDirection().length();
 		for (int i = 0; i < 3; i++)
 		{
-			if (origin[i] < this->LowerLeftBehind[i])
+			if (origin[i] < this->LowerLeftBehind[i] - std::max(0.0f, tmin * dir[i]))
 			{
 				pos[i] = LEFT;
 				inside = false;
 				Candidate[i] = this->LowerLeftBehind[i];
 			}
-			else if (origin[i] > this->UpperRightFront[i])
+			else if (origin[i] > this->UpperRightFront[i] + std::max(0.0f, -tmin * dir[i]))
 			{
 				pos[i] = RIGHT;
 				inside = false;
@@ -54,7 +54,7 @@ public:
 
 		if (!inside)
 		{
-			float tmax = -1;
+			float tmax = 0.0f;
 			int maxIdx = 0;
 			for (int i = 0; i < 3; i++)
 			{
@@ -81,30 +81,43 @@ public:
 				else
 					normal[i] = (pos[i] == RIGHT)? -1 : 1;
 			}
-			hit.set(tmax / length, this->material, {position, normal});
+
+			if (this->material->HasTexture())
+			{
+				int face = maxIdx * 2 + (normal[maxIdx] > 0)? 0 : 1;
+				hit.set(tmax / length, this->material, HitSurface(position, normal, normal, MapToUV(position, face), true));
+			}
+			else
+				hit.set(tmax / length, this->material, {position, normal});
 			return true;
 		}
 		else
 		{
-			float tmax = -1;
-			int maxIdx = 0;
+			float t = INFINITY;
+			int minIdx = 0;
 			for (int i = 0; i < 3; i++)
 			{
-				if (std::abs(dir[i]) > 1e-5)
+				if (std::abs(dir[i]) > 1e-5 && (Candidate[i] - origin[i]) / dir[i] >= 0)
 				{
-					if (tmax < (Candidate[i] - origin[i]) / dir[i])
+					if (t > (Candidate[i] - origin[i]) / dir[i])
 					{
-						tmax = (Candidate[i] - origin[i]) / dir[i];
-						maxIdx = i;
+						t = (Candidate[i] - origin[i]) / dir[i];
+						minIdx = i;
 					}
 				}
 			}
-			if (tmax < tmin || tmax / length > hit.getT())
+			if (t / length < tmin || t / length > hit.getT())
 				return false;
-			Vector3f position = ray.GetAt(tmax / length);
+			Vector3f position = ray.GetAt(t / length);
 			Vector3f normal;
-			normal[maxIdx] = (dir[maxIdx] < 0)? -1 : 1;
-			hit.set(tmax / length, this->material, {position, normal});
+			normal[minIdx] = (dir[minIdx] < 0)? -1 : 1;
+			if (this->material->HasTexture())
+			{
+				int face = minIdx * 2 + (normal[minIdx] > 0)? 0 : 1;
+				hit.set(t / length, this->material, HitSurface(position, normal, normal, MapToUV(position, face), true));
+			}
+			else
+				hit.set(t / length, this->material, {position, normal});
 			return true;
 		}
 	}
@@ -144,6 +157,42 @@ public:
 protected:
 	Vector3f UpperRightFront;
 	Vector3f LowerLeftBehind;
+
+	Vector2f MapToUV(const Vector3f& Point, int face) const
+	{
+		Vector3f Size = this->UpperRightFront - this->LowerLeftBehind;
+		Vector3f point = Point - this->LowerLeftBehind;
+		Vector2f uv;
+		assert(face >= 0 && face < 6);
+		switch(face)
+		{
+		case 0:		// +x
+			uv[0] = point[1] / (2.0f * (Size[0] + Size[1]));
+			uv[1] = (point[2] + Size[0]) / (2.0f * Size[0] + Size[2]);
+			break;
+		case 1:		// -x
+			uv[0] = (2.0f * Size[1] + Size[0] - point[1]) / (2.0f * (Size[0] + Size[1]));
+			uv[1] = (point[2] + Size[0]) / (2.0f * Size[0] + Size[2]);
+			break;
+		case 2:		// +y
+			uv[0] = (Size[1] + Size[0] - point[0]) / (2.0f * (Size[0] + Size[1]));
+			uv[1] = (point[2] + Size[0]) / (2.0f * Size[0] + Size[2]);
+			break;
+		case 3:		// -y
+			uv[0] = (2.0f * Size[1] + Size[0] + point[0]) / (2.0f * (Size[0] + Size[1]));
+			uv[1] = (point[2] + Size[0]) / (2.0f * Size[0] + Size[2]);
+			break;
+		case 4:		// +z
+			uv[0] = point[1] / (2.0f * (Size[0] + Size[1]));
+			uv[1] = 1 - point[0] / (2.0f * Size[0] + Size[2]);
+			break;
+		case 5:		// -z
+			uv[0] = point[1] / (2.0f * (Size[0] + Size[1]));
+			uv[1] = point[0] / (2.0f * Size[0] + Size[2]);
+			break;
+		}
+		return uv;
+	}
 };
 
 #endif //RECTANGLE_H

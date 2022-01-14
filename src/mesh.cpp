@@ -16,9 +16,9 @@ Material* GenerateMaterial(const Vector3f& Ka, const Vector3f& Kd, const Vector3
 	else if (illum == 2)
 		return hasTexture? new Phong(Kd, Ks, Ns, filename) : new Phong(Kd, Ks, Ns);
 	else if (illum == 5)
-		return new Mirror(Ks);
+		return hasTexture? new Mirror(Ks, filename) : new Mirror(Ks);
 	else if (illum == 7)
-		return new Transparent(Ks, Ni);
+		return hasTexture?new Transparent(Ks, Ni, filename) : new Transparent(Ks, Ni);
 	else
 		return hasTexture? new Generic(Ka, Kd, Ks, Ns, Ni, d, filename) : new Generic(Ka, Kd, Ks, Ns, Ni, d);
 }

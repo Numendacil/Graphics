@@ -398,9 +398,9 @@ Material *SceneParser::parseGenericMaterial()
 	else if (illum == 2)
 		return hasTexture? new Phong(Kd, Ks, Ns, filename) : new Phong(Kd, Ks, Ns);
 	else if (illum == 5)
-		return new Mirror(Ks);
+		return hasTexture? new Mirror(Ks, filename) : new Mirror(Ks);
 	else if (illum == 7)
-		return new Transparent(Ks, Ni);
+		return hasTexture?new Transparent(Ks, Ni, filename) : new Transparent(Ks, Ni);
 	else
 		return hasTexture? new Generic(Ka, Kd, Ks, Ns, Ni, d, filename) : new Generic(Ka, Kd, Ks, Ns, Ni, d);
 }
@@ -486,6 +486,8 @@ Phong *SceneParser::parsePhongMaterial()
 Mirror *SceneParser::parseMirrorMaterial()
 {
 	char token[MAX_PARSER_TOKEN_LENGTH];
+	char filename[MAX_PARSER_TOKEN_LENGTH];
+	bool hasTexture = false;
 	Vector3f color(1, 1, 1);
 	getToken(token);
 	assert(!strcmp(token, "{"));
@@ -496,19 +498,30 @@ Mirror *SceneParser::parseMirrorMaterial()
 		{
 			color = readVector3f();
 		}
+		else if (strcmp(token, "texture") == 0)
+		{
+			getToken(filename);
+			hasTexture = true;
+		}
 		else
 		{
 			assert(!strcmp(token, "}"));
 			break;
 		}
 	}
-	auto *answer = new Mirror(color);
+	Mirror *answer;
+	if (hasTexture) 
+		answer = new Mirror(color, filename);
+	else
+		answer = new Mirror(color);
 	return answer;
 }
 
 Transparent *SceneParser::parseTransparentMaterial()
 {
 	char token[MAX_PARSER_TOKEN_LENGTH];
+	char filename[MAX_PARSER_TOKEN_LENGTH];
+	bool hasTexture = false;
 	Vector3f color(1, 1, 1);
 	float ior = 1.0f;
 	getToken(token);
@@ -524,13 +537,22 @@ Transparent *SceneParser::parseTransparentMaterial()
 		{
 			ior = readFloat();
 		}
+		else if (strcmp(token, "texture") == 0)
+		{
+			getToken(filename);
+			hasTexture = true;
+		}
 		else
 		{
 			assert(!strcmp(token, "}"));
 			break;
 		}
 	}
-	auto *answer = new Transparent(color, ior);
+	Transparent *answer;
+	if (hasTexture) 
+		answer = new Transparent(color, ior, filename);
+	else
+		answer = new Transparent(color, ior);
 	return answer;
 }
 
