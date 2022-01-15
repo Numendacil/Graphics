@@ -56,7 +56,7 @@ public:
 
 		if (!inside)
 		{
-			float tmax = -1;
+			float tmax = 0.0f;
 			int maxIdx = 0;
 			for (int i = 0; i < 3; i++)
 			{
@@ -69,7 +69,7 @@ public:
 					}
 				}
 			}
-			if (tmax / length < tmin || tmax / length > hit.getT())
+			if (tmax  < 0 || tmax / length > hit.getT())
 				return false;
 			Vector3f position = ray.GetAt(tmax / length);
 			Vector3f normal;
@@ -191,7 +191,7 @@ private:
 			}
 		}
 	};
-	const int MaxSize = 16;		// Max number of triangles in a box
+	const int MaxSize = 32;		// Max number of triangles in a box
 	const int MaxDepth = 8;		// Max depth of the tree
 
 	OctNode *root = nullptr;

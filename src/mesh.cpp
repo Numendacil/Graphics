@@ -42,6 +42,10 @@ bool Octree::Traverse(Octree::OctNode* node, const Ray &r, Hit &h, float tmin) c
 			result |= triangle.intersect(r, h, tmin);
 		}
 		return result;
+		/*
+		bool result = node->BoundingBox->intersect(r, h, tmin);
+		h.set(h.getT(), this->mesh->material, h.getSurface());
+		return result;*/
 	}
 
 	std::vector<std::pair<float, int>> tList;
@@ -56,12 +60,14 @@ bool Octree::Traverse(Octree::OctNode* node, const Ray &r, Hit &h, float tmin) c
 	}
 
 	std::sort(tList.begin(), tList.end());
+	bool result = false;
 	for (auto& p : tList)
 	{
-		if(Traverse(node->ChildNode[p.second], r, h, tmin))
-			return true;
+		result |= Traverse(node->ChildNode[p.second], r, h, tmin);
+		if (result && node->ChildNode[p.second]->BoundingBox->PointInBox(h.getSurface().position))
+			break;
 	}
-	return false;
+	return result;
 }
 
 bool Mesh::intersect(const Ray &r, Hit &h, float tmin) const

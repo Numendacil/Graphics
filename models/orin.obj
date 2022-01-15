@@ -1,6 +1,6 @@
 # Blender v2.74 (sub 0) OBJ File: ''
 # www.blender.org
-mtllib model.mtl
+mtllib models/orin.mtl
 o mesh_Mesh.001
 v 0.158150 1.284815 1.532080
 v 0.158150 1.285550 1.541665
