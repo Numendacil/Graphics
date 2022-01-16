@@ -1,11 +1,11 @@
 
 PerspectiveCamera {
-    center 5 8 8
-    direction 0.3 -0.5 -1
+    center 20 10 30
+    direction 0.1 0 -1
     up 0 1 0
-    angle 100
-    width 400
-    height 400
+    angle 80
+    width 640
+    height 360
     gamma 2.2
 }
 
@@ -15,12 +15,12 @@ Background {
 }
 
 Materials {
-    numMaterials 4
+    numMaterials 5
     LambertMaterial {
         color 1 1 1
     }
     GenericMaterial {
-        Kd 0.9 0.9 0.9
+        Kd 0.9 0.7 0.7
         Ks 0.3 0.3 0.3
         texture models/textures/Wood.bmp
     }
@@ -33,13 +33,18 @@ Materials {
         Kd 1 1 1
         Ks 1 1 1
         Ni 1.2
-        d 0.3
-        texture models/textures/remilia.bmp
+        d 0.2
+        texture models/textures/church.bmp
+    }
+
+    LambertMaterial {
+        color 1 1 1
+        texture models/textures/wall.bmp
     }
 }
 
 Group {
-    numObjects 3
+    numObjects 5
     MaterialIndex 1
     Plane {
         normal 0 1 0
@@ -48,29 +53,43 @@ Group {
         e2 0 0 2.193
         origin 0 0 0
     }
-    MaterialIndex 2
-    Rectangle {
-        a 3   0   0.4
-        b 3.5 1.5 3.6
+
+    MaterialIndex 4
+    Plane {
+        normal 0 0 1
+        offset 0
+        e1 100 0 0
+        e2 0 24.01 0
+        origin -10 0 0
     }
     MaterialIndex 3
     Transform {
-        Translate 3.25 3.60001 2
+        Translate 0.1 12.0045 6.4421
         XRotate -90
         Rectangle {
-            a -0.15 -1.5 -2.1
-            b 0.15 1.5 2.1
+            a -0.1 -6.442 -12.004
+            b 0.1 6.442 12.004
         }
+    }
+
+    MaterialIndex 0
+    Plane {
+        normal 0 -1 0
+        offset -24.01
+    }
+    Rectangle {
+        a 0 0 12.8844
+        b 0.2 24.01 40
     }
 }
 
 Lights {
     numLights 1
     DirectedPointLight {
-        origin -2.5 10 2.0
-        direction 6 -4 0
-        angle 30
-        power 500 300 100
+        origin -10 5 3
+        direction 1 0 0
+        angle 40
+        power 5000 5000 5000
     }
 }
 
