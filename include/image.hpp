@@ -61,6 +61,8 @@ public:
 
 	void SaveTGA(const char *filename) const;
 
+	static Image *LoadBMP(const char *filename);
+
 	int SaveBMP(const char *filename);
 
 	void SaveImage(const char *filename);

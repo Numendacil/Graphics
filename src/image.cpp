@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "image.hpp"
+#include "utils.hpp"
 
 // some helper functions for save & load
 
@@ -217,8 +218,58 @@ struct BMPHeader
 	int biClrImportant;   /* Number of important colors.  If 0, all colors 
 							 are important */
 };
-int 
-Image::SaveBMP(const char *filename)
+
+Image *Image::LoadBMP(const char *filename)
+{
+	// Github: https://github.com/vallentin/SimpleBMP
+
+	assert(filename != NULL);
+	// must end in .bmp
+	const char *ext = &filename[strlen(filename) - 4];
+	assert(!strcmp(ext,".bmp"));
+	FILE *file = fopen(filename,"rb");
+	assert(file);
+
+	unsigned char bmp_file_header[14] = { 'B', 'M', 0, 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0, };
+	unsigned char bmp_info_header[40] = { 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 24, 0, };
+	unsigned char bmp_pad[3] = { 0, 0, 0, };
+
+	memset(bmp_file_header, 0, sizeof(bmp_file_header));
+	memset(bmp_info_header, 0, sizeof(bmp_info_header));
+
+	fread(bmp_file_header, sizeof(bmp_file_header), 1, file);
+	fread(bmp_info_header, sizeof(bmp_info_header), 1, file);
+
+	assert(bmp_file_header[0] == 'B');
+	assert(bmp_file_header[1] == 'M');
+
+	assert(bmp_info_header[14] == 24 || bmp_info_header[14] == 32);
+
+	int w = (bmp_info_header[4] + (bmp_info_header[5] << 8) + (bmp_info_header[6] << 16) + (bmp_info_header[7] << 24));
+	int h = (bmp_info_header[8] + (bmp_info_header[9] << 8) + (bmp_info_header[10] << 16) + (bmp_info_header[11] << 24));
+
+	Image* answer = new Image(w, h);
+	int bytesPerLine = (3 * (w + 1) / 4) * 4;
+
+	for (int i = 0; i < h; i++)
+	// for (int i = (h - 1); i >= 0; i--)
+	{
+		for (int j = 0; j < w; j++)
+		{
+			unsigned char rgb[3];
+			// note reversed order: b, g, r
+			fread(rgb, 3, 1, file);
+			Vector3f color((float)rgb[2] / 255.0f, (float)rgb[1] / 255.0f, (float)rgb[0] / 255.0f);
+			answer->SetPixel(j, i, color);
+		}
+		fread(bmp_pad, 1, bytesPerLine - 3 * w, file);
+	}
+
+	fclose(file);
+	return answer;
+}
+
+int Image::SaveBMP(const char *filename)
 {
 	int i, j, ipos;
 	int bytesPerLine;
@@ -279,8 +330,8 @@ Image::SaveBMP(const char *filename)
 		{
 			ipos = (width * i + j);
 			line[3*j] = ClampColorComponent(rgb[ipos][2]);
-			line[3*j+1] =ClampColorComponent( rgb[ipos][1]);
-			line[3*j+2] = ClampColorComponent( rgb[ipos][0]);
+			line[3*j + 1] =ClampColorComponent( rgb[ipos][1]);
+			line[3*j + 2] = ClampColorComponent( rgb[ipos][0]);
 		}
 		fwrite(line, bytesPerLine, 1, file);
 	}

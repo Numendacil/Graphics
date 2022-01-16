@@ -33,6 +33,7 @@ public:
 		y = (y >=  this->texture->Height())? this->texture->Height() - 1 : y;
 		return this->texture->GetPixel(x, y);
 	}
+	virtual void SaveTexture(const char* filename) const { this->texture->SaveBMP(filename); }
 	virtual Vector3f SampleOutDir(const Vector3f& in, Vector3f& out, const TransportMode mode, double& pdf, RefType& type, RandomGenerator& rng) const = 0;
 };
 
@@ -65,7 +66,7 @@ public:
 		this->Ns = ns;
 		this->Ni = ni;
 		this->d = d;
-		this->texture = Image::LoadTGA(filename.c_str());
+		this->texture = Image::LoadBMP(filename.c_str());
 	}
 
 	Vector3f Shade(const Vector3f& in, const Vector3f& out, const TransportMode mode) const override
@@ -101,7 +102,7 @@ public:
 				type = RefType::SPECULAR;
 				pdf = prob_r;
 				out = Reflect(in, Vector3f(0, 0, 1));
-				return this->Ks / (std::abs(out[2]) + 1e-5);
+				return this->Ks / (std::abs(out[2]) + 1e-6);
 			}
 			else // Absorbed
 			{
@@ -125,12 +126,15 @@ public:
 			}
 			pdf = 1.0f;
 			if (out == Vector3f::ZERO)
-				return Vector3f::ZERO;
+			{
+				out = Reflect(in, Vector3f(0, 0, 1));
+				return this->Ks / (std::abs(out[2]) + 1e-6);
+			}
 			
 			if (mode == TransportMode::CAMERA)
-				return scale * Vector3f(1, 1, 1) / (std::abs(out[2]) + 1e-5);
+				return scale * this->Ks / (std::abs(out[2]) + 1e-6);
 			else
-				return Vector3f(1, 1, 1) / (std::abs(out[2]) + 1e-5);
+				return this->Ks / (std::abs(out[2]) + 1e-6);
 		}
 	}
 
@@ -149,7 +153,7 @@ public:
 	Lambert(const Vector3f& color, const std::string& filename)
 	{
 		this->color = color; 
-		this->texture = Image::LoadTGA(filename.c_str());
+		this->texture = Image::LoadBMP(filename.c_str());
 	}
 	Vector3f Shade(const Vector3f& in, const Vector3f& out, const TransportMode mode) const override
 	{
@@ -188,7 +192,7 @@ public:
 		this->diffuseColor = d_color;
 		this->specularColor = s_color;
 		this->shininess = s;
-		this->texture = Image::LoadTGA(filename.c_str());
+		this->texture = Image::LoadBMP(filename.c_str());
 	}
 	Vector3f Shade(const Vector3f& in, const Vector3f& out, const TransportMode mode) const override
 	{
@@ -253,7 +257,7 @@ public:
 	Mirror(const Vector3f& c, const std::string& filename)
 	{
 		this->color = c;
-		this->texture = Image::LoadTGA(filename.c_str());
+		this->texture = Image::LoadBMP(filename.c_str());
 	}
 
 	Vector3f Shade(const Vector3f& in, const Vector3f& out, const TransportMode mode) const override
@@ -266,7 +270,7 @@ public:
 		out = Reflect(in, Vector3f(0, 0, 1));
 		pdf = 1;
 		type = RefType::SPECULAR;
-		return this->color / (std::abs(out[2]) + 1e-5);
+		return this->color / (std::abs(out[2]) + 1e-6);
 	}
 };
 
@@ -288,7 +292,7 @@ public:
 	{
 		this->color = c;
 		this->IoR = ior;
-		this->texture = Image::LoadTGA(filename.c_str());
+		this->texture = Image::LoadBMP(filename.c_str());
 	}
 
 	Vector3f Shade(const Vector3f& in, const Vector3f& out, const TransportMode mode) const override
@@ -319,16 +323,16 @@ public:
 		{
 			out = reflect;
 			pdf = 1.0f;
-			return this->color / (co_i + 1e-5);
+			return this->color / std::max((double)co_i, 1e-6);
 		}
 		else
 		{
 			out = refract;
 			pdf = 1.0f;
 			if (mode == TransportMode::CAMERA)
-				return scale * this->color / (co_t + 1e-5);
+				return scale * this->color / std::max((double)co_t, 1e-6);
 			else
-				return this->color / (co_t + 1e-5);
+				return this->color / std::max((double)co_t, 1e-6);
 		}
 	}
 };

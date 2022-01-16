@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <queue>
 #include <numeric>
+#include <omp.h>
 #include "utils.hpp"
 
 struct Photon
@@ -29,6 +30,7 @@ private:
 	Photon* Photons;
 	int num;
 	Node* root;
+	const int max_parallel_lvl = (int) std::log2(omp_get_max_threads());
 
 	Node* KdNodeBuild(int* IdxArray, int n, int level)
 	{
@@ -40,8 +42,19 @@ private:
 		Node* pthis = new Node;
 		pthis->axis = axis;
 		pthis->idx = IdxArray[mid];
-		pthis->left = KdNodeBuild(IdxArray, mid, level + 1);
-		pthis->right = KdNodeBuild(IdxArray + mid + 1, n - mid - 1, level + 1);
+		if (level < this->max_parallel_lvl + 1)
+		{
+			#pragma omp task firstprivate(pthis)
+			pthis->left = KdNodeBuild(IdxArray, mid, level + 1);
+			#pragma omp task firstprivate(pthis)
+			pthis->right = KdNodeBuild(IdxArray + mid + 1, n - mid - 1, level + 1);
+			#pragma omp taskwait
+		}
+		else 
+		{
+			pthis->left = KdNodeBuild(IdxArray, mid, level + 1);
+			pthis->right = KdNodeBuild(IdxArray + mid + 1, n - mid - 1, level + 1);
+		}
 		return pthis;
 	}
 
@@ -109,7 +122,13 @@ public:
 	{
 		std::vector<int> IdxArray(this->num);
 		std::iota(IdxArray.begin(), IdxArray.end(), 0);
-		this->root = this->KdNodeBuild(IdxArray.data(), this->num, 0);
+		#pragma omp parallel
+		{
+			#pragma omp single
+			{
+				this->root = this->KdNodeBuild(IdxArray.data(), this->num, 0);
+			}
+		}
 	}
 
 	float SearchKNN(const Vector3f& target, int k, std::vector<int>& result)

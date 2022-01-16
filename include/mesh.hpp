@@ -60,7 +60,7 @@ public:
 			int maxIdx = 0;
 			for (int i = 0; i < 3; i++)
 			{
-				if (pos[i] != MIDDLE && std::abs(dir[i]) > 1e-5)
+				if (pos[i] != MIDDLE && std::abs(dir[i]) > 1e-6)
 				{
 					if (tmax < (Candidate[i] - origin[i]) / dir[i])
 					{
@@ -125,8 +125,8 @@ public:
 		bool result = true;
 		for (int i = 0; i < 3; i++)
 		{
-			float MaxCoord = std::max(a[i], std::max(b[i], c[i])) + 1e-5;
-			float MinCoord = std::min(a[i], std::min(b[i], c[i])) - 1e-5;
+			float MaxCoord = std::max(a[i], std::max(b[i], c[i])) + 1e-6;
+			float MinCoord = std::min(a[i], std::min(b[i], c[i])) - 1e-6;
 			result &= (MinCoord < this->UpperRightFront[i]) && (MaxCoord > this->LowerLeftBehind[i]);
 		}
 		return result;
@@ -191,7 +191,7 @@ private:
 			}
 		}
 	};
-	const int MaxSize = 32;		// Max number of triangles in a box
+	const int MaxSize = 16;		// Max number of triangles in a box
 	const int MaxDepth = 8;		// Max depth of the tree
 
 	OctNode *root = nullptr;

@@ -58,7 +58,7 @@ public:
 			int maxIdx = 0;
 			for (int i = 0; i < 3; i++)
 			{
-				if (pos[i] != MIDDLE && std::abs(dir[i]) > 1e-5)
+				if (pos[i] != MIDDLE && std::abs(dir[i]) > 1e-6)
 				{
 					if (tmax < (Candidate[i] - origin[i]) / dir[i])
 					{
@@ -97,7 +97,7 @@ public:
 			int minIdx = 0;
 			for (int i = 0; i < 3; i++)
 			{
-				if (std::abs(dir[i]) > 1e-5 && (Candidate[i] - origin[i]) / dir[i] >= 0)
+				if (std::abs(dir[i]) > 1e-6 && (Candidate[i] - origin[i]) / dir[i] >= 0)
 				{
 					if (t > (Candidate[i] - origin[i]) / dir[i])
 					{

@@ -18,7 +18,7 @@ Material* GenerateMaterial(const Vector3f& Ka, const Vector3f& Kd, const Vector3
 	else if (illum == 5)
 		return hasTexture? new Mirror(Ks, filename) : new Mirror(Ks);
 	else if (illum == 7)
-		return hasTexture?new Transparent(Ks, Ni, filename) : new Transparent(Ks, Ni);
+		return hasTexture? new Transparent(Ks, Ni, filename) : new Transparent(Ks, Ni);
 	else
 		return hasTexture? new Generic(Ka, Kd, Ks, Ns, Ni, d, filename) : new Generic(Ka, Kd, Ks, Ns, Ni, d);
 }
@@ -220,6 +220,12 @@ Mesh::Mesh(const char *filename, Material *material) : Object3D(material)
 	logging::INFO("Begin building octree");
 	this->tree = new Octree(this);
 	this->tree->Build(BoundingBox);
+/*
+	for (auto& p : this->MeshMaterial)
+	{
+		if (p.second->HasTexture())
+			p.second->SaveTexture(("tmp/" + p.first + ".bmp").c_str());
+	}*/
 }
 
 void Mesh::parseMtl(const string& filename)

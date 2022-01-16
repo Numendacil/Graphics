@@ -39,7 +39,7 @@ public:
 
 	bool intersect(const Ray &r, Hit &h, float tmin) const override
 	{
-		if (std::abs(Vector3f::dot(this->normal, r.getDirection())) < 1e-5)
+		if (std::abs(Vector3f::dot(this->normal, r.getDirection())) < 1e-6)
 			return false;
 		float distance = -this->d + Vector3f::dot(r.getOrigin(), this->normal);
 		float t = -distance / Vector3f::dot(this->normal, r.getDirection());

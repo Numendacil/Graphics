@@ -24,7 +24,7 @@ void PhotonMapping::BuildPM(SceneParser& scene, std::vector<RandomGenerator>& rn
 		Ray ray = light->SampleRay(power, pdf, rng);
 		if (pdf < 0) 
 			continue;
-		power =  power / std::max(pdf, 1e-5) * nLights;
+		power =  power / std::max(pdf, 1e-6) * nLights;
 
 		for (int DepthCount = 0; DepthCount < this->Depth; DepthCount++)
 		{
@@ -43,7 +43,7 @@ void PhotonMapping::BuildPM(SceneParser& scene, std::vector<RandomGenerator>& rn
 			Hit hit;
 			bool isLight;
 			int LightIdx;
-			if (!scene.intersect(ray, hit, 1e-5, isLight, LightIdx)) 
+			if (!scene.intersect(ray, hit, 1e-6, isLight, LightIdx)) 
 				break;
 			Material* material = hit.getMaterial();
 			const HitSurface& surface = hit.getSurface();
@@ -69,7 +69,7 @@ void PhotonMapping::BuildPM(SceneParser& scene, std::vector<RandomGenerator>& rn
 			}
 			out = RelToAbs(tangent, binormal, surface.normal, out);
 			ray = Ray(surface.position, out);
-			power = power * co / std::max(pdf, 1e-5)  
+			power = power * co / std::max(pdf, 1e-6)  
 				* std::abs(Vector3f::dot(out, surface.geonormal)) * std::abs(Vector3f::dot(in, surface.normal)) / std::abs(Vector3f::dot(in, surface.geonormal));
 		}
 	}
@@ -112,8 +112,8 @@ Vector3f PhotonMapping:: GetRadiance(const Ray& r, SceneParser& scene, RandomGen
 	{
 		Hit hit;
 		bool isLight;
-		int LightIdx;
-		if (!scene.intersect(ray, hit, 1e-5, isLight, LightIdx))
+		int LightIdx = 0;
+		if (!scene.intersect(ray, hit, 1e-6, isLight, LightIdx))
 			return scene.getBackgroundColor();
 		Vector3f dir = ray.getDirection().normalized();
 
@@ -133,9 +133,11 @@ Vector3f PhotonMapping:: GetRadiance(const Ray& r, SceneParser& scene, RandomGen
 					+ scene.getLight(LightIdx)->GetIllumin(dir) * std::abs(Vector3f::dot(dir, surface.normal)));
 			return power * this->GetPhotonRadiance(dir, hit, scene, rng);
 		}
+		if (surface.HasTexture && material->HasTexture())
+			power = power * material->GetTexture(surface.texcoord);
 		out = RelToAbs(tangent, binormal, surface.normal, out);
 		ray = Ray(surface.position, out);
-		power = power * co * std::abs(Vector3f::dot(out, surface.normal)) / std::max(pdf, 1e-5);
+		power = power * co * std::abs(Vector3f::dot(out, surface.normal)) / std::max(pdf, 1e-6);
 		if (power.length() < 1e-5)
 			break;
 	}
@@ -158,7 +160,6 @@ void PhotonMapping::Render(SceneParser& scene, Image& image)
 		this->BuildPM(scene, rng_list);
 		logging::INFO("Finish building PM");
 		int count = 0;
-
 		Image image_tmp(image.Width(), image.Height()); 
 		#pragma omp parallel for collapse(2) schedule(dynamic, 5)
 		for (int i = 0; i < image.Width(); i++)
@@ -188,12 +189,13 @@ void PhotonMapping::Render(SceneParser& scene, Image& image)
 				{
 					count++;
 					if (!(count % 10000))
-						logging::INFO(std::to_string(count) + "/" + std::to_string(image.Width() * image.Height()) + " pixels finished");
+						logging::INFO(std::to_string(count) + "/" + std::to_string(image.Width() * image.Height()) + " pixels finished\033[F");
 				}
 			}
 		}
 		image_tmp.SaveBMP(("tmp/" + std::to_string(iteration) + ".bmp").c_str());
 		this->SearchRadius *= std::sqrt((iteration + this->alpha) / (iteration + 1));
+		logging::INFO("Iteration " + std::to_string(iteration) + " finished                                  ");
 	}
 
 	for (int i = 0; i < image.Width(); i++)
