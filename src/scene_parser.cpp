@@ -250,6 +250,10 @@ void SceneParser::parseLights()
 		{
 			lights[count] = parsePointLight();
 		}
+		else if (strcmp(token, "DirectedPointLight") == 0)
+		{
+			lights[count] = parseDirectedPointLight();
+		}
 		else
 		{
 			printf("Unknown token in parseLight: '%s'\n", token);
@@ -261,7 +265,7 @@ void SceneParser::parseLights()
 	assert(!strcmp(token, "}"));
 }
 
-Light *SceneParser::parseAreaLight()
+AreaLight *SceneParser::parseAreaLight()
 {
 	char token[MAX_PARSER_TOKEN_LENGTH];
 	getToken(token);
@@ -275,7 +279,7 @@ Light *SceneParser::parseAreaLight()
 	return new AreaLight(object, power);
 }
 
-Light *SceneParser::parsePointLight()
+PointLight *SceneParser::parsePointLight()
 {
 	char token[MAX_PARSER_TOKEN_LENGTH];
 	getToken(token);
@@ -290,6 +294,30 @@ Light *SceneParser::parsePointLight()
 	assert(!strcmp(token, "}"));
 	return new PointLight(position, power);
 }
+
+DirectedPointLight *SceneParser::parseDirectedPointLight()
+{
+	char token[MAX_PARSER_TOKEN_LENGTH];
+	getToken(token);
+	assert(!strcmp(token, "{"));
+	getToken(token);
+	assert(!strcmp(token, "position"));
+	Vector3f position = readVector3f();
+	getToken(token);
+	assert(!strcmp(token, "direction"));
+	Vector3f dir = readVector3f();
+	getToken(token);
+	assert(!strcmp(token, "angle"));
+	float angle_degrees = readFloat();
+	float angle_radians = DegreesToRadians(angle_degrees);
+	getToken(token);
+	assert(!strcmp(token, "power"));
+	Vector3f power = readVector3f();
+	getToken(token);
+	assert(!strcmp(token, "}"));
+	return new DirectedPointLight(position, dir, angle_radians,power);
+}
+
 // ====================================================================
 // ====================================================================
 

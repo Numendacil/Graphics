@@ -91,8 +91,9 @@ private:
 	void parseBackground();
 
 	void parseLights();
-	Light *parsePointLight();
-	Light *parseAreaLight();
+	PointLight *parsePointLight();
+	AreaLight *parseAreaLight();
+	DirectedPointLight *parseDirectedPointLight();
 
 	void parseMaterials();
 	Lambert *parseLambertMaterial();

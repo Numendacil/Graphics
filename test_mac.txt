@@ -1,7 +1,7 @@
 
 PerspectiveCamera {
-    center 0 2 5
-    direction 0 -0.5 -1
+    center 5 8 8
+    direction 0.3 -0.5 -1
     up 0 1 0
     angle 100
     width 400
@@ -15,43 +15,62 @@ Background {
 }
 
 Materials {
-    numMaterials 2
+    numMaterials 4
     LambertMaterial {
-        color 0.5 0.5 0.5
-        texture textures/pebble.tga
-    }
-    TransparentMaterial {
         color 1 1 1
-        index 1.2
-        texture textures/alice.tga
+    }
+    GenericMaterial {
+        Kd 0.9 0.9 0.9
+        Ks 0.3 0.3 0.3
+        texture models/textures/Wood.bmp
+    }
+    GenericMaterial {
+        Kd 0.2 0.2 0.2
+        Ks 0.05 0.05 0.05
+        Ns 20
+    }
+    GenericMaterial {
+        Kd 1 1 1
+        Ks 1 1 1
+        Ni 1.2
+        d 0.3
+        texture models/textures/remilia.bmp
     }
 }
 
 Group {
-    numObjects 2
+    numObjects 3
     MaterialIndex 1
     Plane {
-        normal 0 3 0
-        offset 0
-        e1 5 0 0
-        e2 0 0 -5
-        origin 0 3 0
-    }
-    MaterialIndex 0
-    Plane {
         normal 0 1 0
-        offset -2
-        e1 5 0 0
-        e2 0 0 -5
-        origin 0 -2 0
+        offset 0
+        e1 4.8 0 0
+        e2 0 0 2.193
+        origin 0 0 0
+    }
+    MaterialIndex 2
+    Rectangle {
+        a 3   0   0.4
+        b 3.5 1.5 3.6
+    }
+    MaterialIndex 3
+    Transform {
+        Translate 3.25 3.60001 2
+        XRotate -90
+        Rectangle {
+            a -0.15 -1.5 -2.1
+            b 0.15 1.5 2.1
+        }
     }
 }
 
 Lights {
     numLights 1
-    PointLight {
-        position 0.0 5 0
-        power 100 100 100
+    DirectedPointLight {
+        origin -2.5 10 2.0
+        direction 6 -4 0
+        angle 30
+        power 500 300 100
     }
 }
 

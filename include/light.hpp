@@ -100,4 +100,52 @@ private:
 	Vector3f power;
 };
 
+class DirectedPointLight : public Light
+{
+public:
+	DirectedPointLight() = delete;
+
+	DirectedPointLight(const Vector3f &p, const Vector3f &dir, float angle, const Vector3f &c)
+	{
+		this->position = p;
+		this->dir = dir.normalized();
+		this->angle = angle;	// In radian
+		this->power = c;
+	}
+
+	~DirectedPointLight() override = default;
+
+	Ray SampleRay(Vector3f &power, double& pdf, RandomGenerator& rng) const override
+	{
+		power = this->power;
+		float costerm = std::cos(this->angle);
+		pdf = 1.0f / (2 * M_PI * (1 - costerm));
+		float phi = 2 * M_PI * rng.GetUniformReal();
+		float z = (1 - costerm) * rng.GetUniformReal() + costerm;
+		Vector3f out(std::sqrt(1 - z * z) * std::cos(phi), std::sqrt(1 - z * z) * std::sin(phi), z);
+
+		Vector3f tangent = GetPerpendicular(this->dir);
+		Vector3f binormal = Vector3f::cross(this->dir, tangent);
+		out = RelToAbs(tangent, binormal, this->dir, out);
+
+		return {this->position, out};
+	}
+
+	bool intersect(const Ray &r, Hit &h, float tmin) const override
+	{
+		return false;
+	}
+
+	Vector3f GetIllumin(const Vector3f &dir) const override
+	{
+		return this->power;
+	}
+
+private:
+	Vector3f position;
+	Vector3f power;
+	Vector3f dir;
+	float angle;
+};
+
 #endif // LIGHT_H
